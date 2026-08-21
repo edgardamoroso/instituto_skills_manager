@@ -80,6 +80,47 @@
           <div id="admin-course-list" class="admin-list"></div>
         </div>
       </section>
+
+      <section id="lesson-manager" class="section-stack panel lesson-manager" hidden>
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Conteúdo do curso</p>
+            <h2 id="lesson-course-title">Aulas</h2>
+          </div>
+          <button type="button" id="close-lesson-manager" class="btn btn-secondary">Fechar</button>
+        </div>
+        <p class="panel-note">Adicione quantas aulas precisar. Para arquivos locais, prefira PDFs e materiais leves; vídeos devem ser informados por link.</p>
+
+        <form id="lesson-form" class="lesson-form">
+          <input type="hidden" id="lesson-id" />
+          <label for="lesson-title">Título da aula</label>
+          <input id="lesson-title" name="lessonTitle" type="text" required />
+          <label for="lesson-description">Descrição da aula</label>
+          <textarea id="lesson-description" name="lessonDescription" rows="2"></textarea>
+          <div class="lesson-fields">
+            <div>
+              <label for="lesson-resource-type">Tipo de recurso</label>
+              <select id="lesson-resource-type" name="resourceType">
+                <option value="video">Vídeo por link</option>
+                <option value="pdf">PDF por link</option>
+                <option value="link">Link externo</option>
+                <option value="file">Arquivo do computador</option>
+              </select>
+            </div>
+            <div>
+              <label for="lesson-resource">URL do recurso</label>
+              <input id="lesson-resource" name="resourceUrl" type="url" placeholder="https://..." />
+            </div>
+          </div>
+          <label for="lesson-file">Ou selecione um arquivo</label>
+          <input id="lesson-file" name="resourceFile" type="file" />
+          <div class="lesson-actions">
+            <button type="submit" class="btn btn-primary">Adicionar aula</button>
+            <button type="button" id="cancel-lesson-edit" class="btn btn-secondary">Limpar</button>
+          </div>
+        </form>
+        <div id="lesson-list" class="lesson-list"></div>
+      </section>
     </main>
 
     <footer class="footer">
