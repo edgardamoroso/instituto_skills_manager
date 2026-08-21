@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Administração | Instituto Skills Manager</title>
+    <meta
+      name="description"
+      content="Painel de administração para gerenciar cursos do Instituto Skills Manager."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="admin">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><span>Instituto</span> Skills Manager</a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Início</a>
+          <a href="cursos-gravados.html" class="nav-link">Cursos gravados</a>
+          <a href="cursos-online.html" class="nav-link">Cursos online</a>
+          <a href="admin.html" class="nav-link active">Administrador</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container page-shell">
+      <section class="hero-grid admin-hero">
+        <div>
+          <p class="eyebrow">Painel do administrador</p>
+          <h1>Gerencie cursos, preços e conteúdo</h1>
+          <p class="hero-text">
+            Adicione, edite ou remova cursos com facilidade e mantenha a plataforma sempre atualizada.
+          </p>
+        </div>
+        <img
+          src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80"
+          alt="Equipe trabalhando em gestão"
+          class="hero-image"
+        />
+      </section>
+
+      <section class="section-stack admin-layout">
+        <form id="course-form" class="panel">
+          <h3 id="form-title">Adicionar curso</h3>
+          <input type="hidden" id="course-id" />
+
+          <label for="title">Nome do curso</label>
+          <input id="title" name="title" type="text" required />
+
+          <label for="type">Tipo</label>
+          <select id="type" name="type" required>
+            <option value="gravado">Gravado</option>
+            <option value="online">Online</option>
+          </select>
+
+          <label for="description">Descrição</label>
+          <textarea id="description" name="description" rows="3" required></textarea>
+
+          <label for="duration">Duração</label>
+          <input id="duration" name="duration" type="text" required />
+
+          <label for="price">Preço</label>
+          <input id="price" name="price" type="text" required />
+
+          <button type="submit" class="btn btn-primary btn-full">Salvar curso</button>
+          <button type="button" id="cancel-edit" class="btn btn-secondary btn-full">Cancelar</button>
+        </form>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Cursos cadastrados</h3>
+            <span id="course-count" class="badge"></span>
+          </div>
+          <div id="admin-course-list" class="admin-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-content">
+        <p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
