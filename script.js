@@ -53,6 +53,9 @@ const lessonCourseTitle = document.getElementById('lesson-course-title');
 const lessonForm = document.getElementById('lesson-form');
 const lessonList = document.getElementById('lesson-list');
 const lessonIdInput = document.getElementById('lesson-id');
+const STUDENT_STORAGE_KEY = 'skills-manager-students-v1';
+const studentForm = document.getElementById('student-form');
+const enrollmentForm = document.getElementById('enrollment-form');
 
 function loadCourses() {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -146,7 +149,7 @@ function renderAdminList() {
           </div>
           <div class="actions">
             <button class="action-btn edit" data-action="edit" data-id="${course.id}">Editar</button>
-            <button class="action-btn lessons" data-action="lessons" data-id="${course.id}">Aulas</button>
+            <a class="action-btn lessons" href="gerenciar-curso.html?id=${course.id}">Gerenciar conteúdo</a>
             <button class="action-btn delete" data-action="delete" data-id="${course.id}">Excluir</button>
           </div>
         </div>
@@ -389,6 +392,7 @@ function renderCoursePage() {
       <h1>${course.title}</h1>
       <p class="course-description">${course.description}</p>
       <div class="meta"><span>⏱ ${course.duration}</span><span>💸 ${course.price}</span><span>▣ ${lessons.length} aulas</span></div>
+      <a class="btn btn-primary" href="inscricao.html?courseId=${course.id}">Inscrever-se neste curso</a>
     </section>
     <section class="course-content">
       <div class="section-header"><h2>Conteúdo do curso</h2><p>Acompanhe as aulas e acesse os materiais disponíveis.</p></div>
@@ -410,3 +414,166 @@ function createPublicLesson(lesson, index) {
 }
 
 renderCoursePage();
+
+const courseEditorPage = document.getElementById('course-editor-page');
+
+function renderCourseEditorPage() {
+  if (!courseEditorPage) return;
+  const courseId = new URLSearchParams(window.location.search).get('id');
+  const course = courses.find((item) => item.id === courseId);
+  if (!course) {
+    courseEditorPage.innerHTML = '<p class="empty-state">Curso não encontrado. <a href="admin.html">Voltar ao administrador</a></p>';
+    return;
+  }
+  courseEditorPage.innerHTML = `
+    <section class="course-heading"><a class="back-link" href="admin.html">← Voltar ao administrador</a><span class="type-pill">Editor de conteúdo</span><h1>${course.title}</h1><p class="course-description">Cadastre e organize as aulas deste curso.</p></section>
+    <section class="panel">
+      <form id="page-lesson-form" class="lesson-form">
+        <label for="page-lesson-title">Título da aula</label><input id="page-lesson-title" name="title" required />
+        <label for="page-lesson-description">Descrição</label><textarea id="page-lesson-description" name="description" rows="2"></textarea>
+        <div class="lesson-fields"><div><label for="page-resource-type">Tipo</label><select id="page-resource-type" name="resourceType"><option value="video">Vídeo por link</option><option value="pdf">PDF por link</option><option value="link">Link externo</option><option value="file">Arquivo local</option></select></div><div><label for="page-resource">URL</label><input id="page-resource" name="resource" type="url" placeholder="https://..." /></div></div>
+        <label for="page-file">Ou selecione um arquivo</label><input id="page-file" name="file" type="file" />
+        <button class="btn btn-primary" type="submit">Adicionar aula</button>
+      </form>
+      <div id="page-lesson-list" class="lesson-list"></div>
+    </section>`;
+  renderEditorLessons(course);
+  document.getElementById('page-lesson-form').addEventListener('submit', (event) => addEditorLesson(event, course));
+}
+
+function renderEditorLessons(course) {
+  const list = document.getElementById('page-lesson-list');
+  if (!list) return;
+  const freshList = list.cloneNode(false);
+  list.replaceWith(freshList);
+  freshList.innerHTML = course.lessons.length ? course.lessons.map((lesson, index) => `
+    <article class="lesson-item"><div class="lesson-number">${String(index + 1).padStart(2, '0')}</div><div class="lesson-copy"><strong>${lesson.title}</strong><p>${lesson.description || 'Sem descrição adicional.'}</p><span class="badge">${getResourceLabel(lesson.resourceType)}${lesson.resourceName ? ` · ${lesson.resourceName}` : ''}</span></div><button class="action-btn delete" data-editor-delete="${lesson.id}">Excluir</button></article>`).join('') : '<p class="empty-state">Nenhuma aula cadastrada.</p>';
+  freshList.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-editor-delete]');
+    if (!button) return;
+    course.lessons = course.lessons.filter((lesson) => lesson.id !== button.dataset.editorDelete);
+    saveCourses();
+    renderEditorLessons(course);
+  });
+}
+
+async function addEditorLesson(event, course) {
+  event.preventDefault();
+  const formElement = event.currentTarget;
+  const formData = new FormData(formElement);
+  const file = formData.get('file');
+  let resource = formData.get('resource').toString().trim();
+  let resourceName = '';
+  if (file instanceof File && file.size) {
+    if (file.size > 8 * 1024 * 1024) return alert('Escolha um arquivo de até 8 MB.');
+    resource = await readFileAsDataUrl(file);
+    resourceName = file.name;
+  }
+  if (!formData.get('title').toString().trim() || !resource) return alert('Informe título e recurso.');
+  course.lessons.push({ id: crypto.randomUUID(), title: formData.get('title').toString().trim(), description: formData.get('description').toString().trim(), resourceType: formData.get('resourceType').toString(), resource, resourceName });
+  saveCourses();
+  formElement.reset();
+  renderEditorLessons(course);
+}
+
+renderCourseEditorPage();
+
+function loadStudents() {
+  try {
+    const saved = localStorage.getItem(STUDENT_STORAGE_KEY);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Não foi possível carregar os alunos salvos.', error);
+    return [];
+  }
+}
+
+function saveStudents(students) {
+  localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(students));
+}
+
+const students = loadStudents();
+const studentList = document.getElementById('student-list');
+const studentCount = document.getElementById('student-count');
+const studentOptions = document.getElementById('student-course-options');
+const studentIdInput = document.getElementById('student-id');
+
+function renderCourseOptions(selectedIds = []) {
+  if (!studentOptions) return;
+  studentOptions.innerHTML = courses.map((course) => `<label class="check-option"><input type="checkbox" name="courseIds" value="${course.id}" ${selectedIds.includes(course.id) ? 'checked' : ''}>${course.title}</label>`).join('');
+}
+
+function renderStudents() {
+  if (!studentList) return;
+  studentCount.textContent = `${students.length} ${students.length === 1 ? 'aluno' : 'alunos'}`;
+  studentList.innerHTML = students.length ? students.map((student) => {
+    const names = student.courseIds.map((id) => courses.find((course) => course.id === id)?.title).filter(Boolean);
+    return `<article class="admin-item"><div><strong>${student.name}</strong><p>${student.email} · ${student.phone}</p><p>${student.address}</p><span class="badge">${names.length ? names.join(', ') : 'Sem curso vinculado'}</span></div><div class="actions"><button class="action-btn edit" data-student-action="edit" data-id="${student.id}">Editar</button><button class="action-btn delete" data-student-action="delete" data-id="${student.id}">Excluir</button></div></article>`;
+  }).join('') : '<p class="empty-state">Nenhum aluno cadastrado.</p>';
+}
+
+function resetStudentForm() {
+  if (!studentForm) return;
+  studentForm.reset();
+  studentIdInput.value = '';
+  document.getElementById('student-form-title').textContent = 'Cadastrar aluno';
+  renderCourseOptions();
+}
+
+if (studentForm) {
+  renderCourseOptions();
+  renderStudents();
+  studentForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(studentForm);
+    const student = { id: studentIdInput.value || crypto.randomUUID(), name: data.get('name').toString().trim(), address: data.get('address').toString().trim(), phone: data.get('phone').toString().trim(), email: data.get('email').toString().trim().toLowerCase(), courseIds: data.getAll('courseIds') };
+    const index = students.findIndex((item) => item.id === student.id);
+    if (index >= 0) students[index] = student; else students.unshift(student);
+    saveStudents(students);
+    resetStudentForm();
+    renderStudents();
+  });
+}
+
+if (document.getElementById('cancel-student-edit')) document.getElementById('cancel-student-edit').addEventListener('click', resetStudentForm);
+if (studentList) studentList.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-student-action]');
+  if (!button) return;
+  const student = students.find((item) => item.id === button.dataset.id);
+  if (!student) return;
+  if (button.dataset.studentAction === 'delete') {
+    if (!window.confirm(`Deseja excluir o aluno "${student.name}"?`)) return;
+    students.splice(students.indexOf(student), 1);
+    saveStudents(students);
+    renderStudents();
+    return;
+  }
+  studentIdInput.value = student.id;
+  ['name', 'address', 'phone', 'email'].forEach((field) => { document.getElementById(`student-${field}`).value = student[field]; });
+  document.getElementById('student-form-title').textContent = 'Editar aluno';
+  renderCourseOptions(student.courseIds);
+  document.getElementById('student-name').focus();
+});
+
+const enrollmentCourse = document.getElementById('enrollment-course');
+if (enrollmentCourse) {
+  const requestedCourseId = new URLSearchParams(window.location.search).get('courseId');
+  enrollmentCourse.innerHTML = `<option value="">Selecione um curso</option>${courses.map((course) => `<option value="${course.id}" ${course.id === requestedCourseId ? 'selected' : ''}>${course.title}</option>`).join('')}`;
+}
+
+if (enrollmentForm) enrollmentForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const data = new FormData(enrollmentForm);
+  const email = data.get('email').toString().trim().toLowerCase();
+  const existing = students.find((student) => student.email === email);
+  const student = existing || { id: crypto.randomUUID(), name: '', address: '', phone: '', email, courseIds: [] };
+  student.name = data.get('name').toString().trim();
+  student.address = data.get('address').toString().trim();
+  student.phone = data.get('phone').toString().trim();
+  student.courseIds = [...new Set([...student.courseIds, data.get('courseId').toString()])];
+  if (!existing) students.unshift(student);
+  saveStudents(students);
+  document.getElementById('enrollment-feedback').textContent = 'Inscrição realizada com sucesso.';
+  enrollmentForm.reset();
+});

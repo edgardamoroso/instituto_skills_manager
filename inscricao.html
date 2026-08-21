@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inscrição | Instituto Skills Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="enrollment">
+    <header class="site-header"><nav class="container nav"><a class="brand" href="index.html"><span>Instituto</span> Skills Manager</a><div class="nav-links"><a href="index.html" class="nav-link">Início</a><a href="cursos-gravados.html" class="nav-link">Cursos</a></div></nav></header>
+    <main class="container page-shell"><section class="course-heading"><p class="eyebrow">Inscrição de aluno</p><h1>Entre para uma nova turma</h1><p class="course-description">Preencha seus dados e escolha o curso que deseja realizar.</p></section><form id="enrollment-form" class="panel enrollment-form"><label for="enrollment-name">Nome completo</label><input id="enrollment-name" name="name" required /><label for="enrollment-address">Endereço</label><input id="enrollment-address" name="address" required /><label for="enrollment-phone">Telefone</label><input id="enrollment-phone" name="phone" type="tel" required /><label for="enrollment-email">E-mail</label><input id="enrollment-email" name="email" type="email" required /><label for="enrollment-course">Curso de interesse</label><select id="enrollment-course" name="courseId" required></select><button class="btn btn-primary" type="submit">Confirmar inscrição</button><p id="enrollment-feedback" class="form-feedback" role="status"></p></form></main>
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script src="script.js"></script>
+  </body>
+</html>

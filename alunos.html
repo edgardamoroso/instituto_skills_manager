@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alunos | Instituto Skills Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="students">
+    <header class="site-header"><nav class="container nav"><a class="brand" href="index.html"><span>Instituto</span> Skills Manager</a><div class="nav-links"><a href="admin.html" class="nav-link">Cursos</a><a href="alunos.html" class="nav-link active">Alunos</a></div></nav></header>
+    <main class="container page-shell">
+      <section class="course-heading"><p class="eyebrow">Área administrativa</p><h1>Alunos e inscrições</h1><p class="course-description">Cadastre participantes e vincule cada aluno aos cursos disponíveis.</p></section>
+      <section class="admin-layout">
+        <form id="student-form" class="panel"><h2 id="student-form-title">Cadastrar aluno</h2><input type="hidden" id="student-id" /><label for="student-name">Nome completo</label><input id="student-name" name="name" required /><label for="student-address">Endereço</label><input id="student-address" name="address" required /><label for="student-phone">Telefone</label><input id="student-phone" name="phone" type="tel" required /><label for="student-email">E-mail</label><input id="student-email" name="email" type="email" required /><fieldset><legend>Cursos</legend><div id="student-course-options" class="check-list"></div></fieldset><button class="btn btn-primary btn-full" type="submit">Salvar aluno</button><button class="btn btn-secondary btn-full" type="button" id="cancel-student-edit">Cancelar</button></form>
+        <section class="panel"><div class="panel-header"><h2>Alunos cadastrados</h2><span id="student-count" class="badge"></span></div><div id="student-list" class="admin-list"></div></section>
+      </section>
+    </main>
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script src="script.js"></script>
+  </body>
+</html>
