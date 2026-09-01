@@ -1,7 +1,6 @@
 # dependências e uploads
 backend/node_modules/
 backend/uploads/
-backend/backend/uploads/
 node_modules/
 
 # banco SQLite (recriado no boot)
