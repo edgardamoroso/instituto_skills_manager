@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrar | Instituto Skills Manager</title>
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="login">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Início</a>
+          <a href="cadastro.html" class="nav-link">Criar conta</a>
+        </div>
+      </nav>
+    </header>
+    <main class="container page-shell">
+      <section class="auth-shell">
+        <h1>Entrar</h1>
+        <p class="course-description">Acesse a área do aluno ou o painel administrativo.</p>
+        <form id="login-form" class="panel enrollment-form">
+          <label for="login-email">E-mail</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" required />
+          <label for="login-password">Senha</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+          <button class="btn btn-primary btn-full" type="submit">Entrar</button>
+          <p id="login-feedback" class="form-feedback" role="status"></p>
+        </form>
+        <p class="auth-alt">Não tem conta? <a href="cadastro.html">Criar conta de aluno</a></p>
+      </section>
+    </main>
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

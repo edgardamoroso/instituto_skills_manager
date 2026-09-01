@@ -1,0 +1,25 @@
+# systemd — /etc/systemd/system/skills-manager.service
+# Ajuste User, WorkingDirectory e o caminho do node. Depois:
+#   systemctl daemon-reload && systemctl enable --now skills-manager
+
+[Unit]
+Description=Instituto Skills Manager
+After=network.target
+
+[Service]
+Type=simple
+User=skills
+WorkingDirectory=/opt/skills-manager/backend
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/server.js
+Restart=on-failure
+RestartSec=3
+# Endurecimento do processo.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/skills-manager/backend/data /opt/skills-manager/backend/uploads
+
+[Install]
+WantedBy=multi-user.target

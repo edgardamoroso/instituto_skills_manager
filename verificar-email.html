@@ -3,31 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Solicitar matrícula | Instituto Skills Manager</title>
+    <title>Confirmar e-mail | Instituto Skills Manager</title>
     <link rel="stylesheet" href="assets/fonts.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body data-page="enrollment">
+  <body data-page="verify-email">
     <header class="site-header">
       <nav class="container nav">
         <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
         <div class="nav-links">
           <a href="index.html" class="nav-link">Início</a>
-          <a href="cursos-gravados.html" class="nav-link">Cursos assíncronos</a>
-          <a href="cursos-online.html" class="nav-link">Cursos síncronos</a>
+          <a href="login.html" class="nav-link">Entrar</a>
         </div>
       </nav>
     </header>
     <main class="container page-shell">
-      <section class="course-heading">
-        <p class="eyebrow">Matrícula</p>
-        <h1>Solicitar matrícula</h1>
-        <p class="course-description">
-          Escolha o curso desejado. O administrador define o plano de pagamento em parcelas e
-          ativa sua matrícula para liberar o conteúdo.
-        </p>
+      <section class="auth-shell">
+        <h1>Confirmação de e-mail</h1>
+        <div id="verify-status" class="panel">
+          <p>Validando seu link…</p>
+        </div>
       </section>
-      <div id="enroll-request"></div>
     </main>
     <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
     <script type="module" src="js/main.js"></script>

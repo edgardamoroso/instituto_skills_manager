@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrículas e Pagamentos | Instituto Skills Manager</title>
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="enrollments">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="admin.html" class="nav-link">Cursos</a>
+          <a href="alunos.html" class="nav-link">Alunos</a>
+          <a href="matriculas.html" class="nav-link active">Matrículas</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container page-shell">
+      <section class="course-heading">
+        <p class="eyebrow">Área administrativa</p>
+        <h1>Matrículas e pagamentos</h1>
+        <p class="course-description">
+          Visão geral da base de dados, matrículas por curso, controle de parcelas e ativação
+          da participação de cada aluno.
+        </p>
+      </section>
+
+      <section class="section-stack">
+        <div class="section-header"><h2>Visão geral</h2></div>
+        <div id="overview-cards" class="stat-grid"></div>
+        <div class="panel table-panel">
+          <div class="table-scroll">
+            <table class="data-table" id="overview-table">
+              <thead>
+                <tr>
+                  <th>Curso</th><th>Tipo</th><th>Matrículas</th><th>Ativas</th>
+                  <th>Previsto</th><th>Recebido</th><th>Em atraso</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-stack admin-layout">
+        <form id="new-enrollment-form" class="panel">
+          <h2>Nova matrícula</h2>
+          <label for="enroll-student">Aluno</label>
+          <select id="enroll-student" name="userId" required></select>
+          <label for="enroll-course">Curso</label>
+          <select id="enroll-course" name="courseId" required></select>
+          <div class="lesson-fields">
+            <div>
+              <label for="enroll-installments">Nº de parcelas</label>
+              <input id="enroll-installments" name="installmentsCount" type="number" min="1" max="60" value="1" required />
+            </div>
+            <div>
+              <label for="enroll-value">Valor da parcela</label>
+              <input id="enroll-value" name="installmentValue" type="text" placeholder="R$ 0,00" required />
+            </div>
+          </div>
+          <label for="enroll-first-due">1º vencimento</label>
+          <input id="enroll-first-due" name="firstDueDate" type="date" required />
+          <button class="btn btn-primary btn-full" type="submit">Criar matrícula</button>
+          <p id="new-enrollment-feedback" class="form-feedback" role="status"></p>
+        </form>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Matrículas por curso</h2>
+          </div>
+          <label for="course-filter">Curso</label>
+          <select id="course-filter"></select>
+          <div class="table-scroll">
+            <table class="data-table" id="enrollment-table">
+              <thead>
+                <tr><th>Aluno</th><th>Status</th><th>Parcelas</th><th>Em atraso</th><th>Ações</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="enrollment-detail" class="section-stack panel" hidden></section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-content">
+        <p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

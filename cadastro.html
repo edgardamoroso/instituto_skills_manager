@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Criar conta | Instituto Skills Manager</title>
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="signup">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Início</a>
+          <a href="login.html" class="nav-link">Entrar</a>
+        </div>
+      </nav>
+    </header>
+    <main class="container page-shell">
+      <section class="auth-shell">
+        <h1>Criar conta de aluno</h1>
+        <p class="course-description">Depois de criar a conta você pode solicitar matrícula nos cursos.</p>
+        <form id="signup-form" class="panel enrollment-form">
+          <label for="signup-name">Nome completo</label>
+          <input id="signup-name" name="name" required />
+          <label for="signup-email">E-mail</label>
+          <input id="signup-email" name="email" type="email" autocomplete="email" required />
+          <label for="signup-phone">Telefone</label>
+          <input id="signup-phone" name="phone" type="tel" />
+          <label for="signup-address">Endereço</label>
+          <input id="signup-address" name="address" />
+          <label for="signup-password">Senha (mínimo 8 caracteres)</label>
+          <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+          <label for="signup-password-confirm">Confirme a senha</label>
+          <input id="signup-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required />
+          <button class="btn btn-primary btn-full" type="submit">Criar conta</button>
+          <p id="signup-feedback" class="form-feedback" role="status"></p>
+        </form>
+        <p class="auth-alt">Já tem conta? <a href="login.html">Entrar</a></p>
+      </section>
+    </main>
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

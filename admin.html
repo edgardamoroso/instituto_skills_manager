@@ -8,24 +8,17 @@
       name="description"
       content="Painel de administração para gerenciar cursos do Instituto Skills Manager."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="assets/fonts.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-page="admin">
     <header class="site-header">
       <nav class="container nav">
-        <a class="brand" href="index.html"><span>Instituto</span> Skills Manager</a>
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
         <div class="nav-links">
-          <a href="index.html" class="nav-link">Início</a>
-          <a href="cursos-gravados.html" class="nav-link">Cursos gravados</a>
-          <a href="cursos-online.html" class="nav-link">Cursos online</a>
-          <a href="admin.html" class="nav-link active">Administrador</a>
+          <a href="admin.html" class="nav-link active">Cursos</a>
           <a href="alunos.html" class="nav-link">Alunos</a>
+          <a href="matriculas.html" class="nav-link">Matrículas</a>
         </div>
       </nav>
     </header>
@@ -58,8 +51,8 @@
 
           <label for="type">Tipo</label>
           <select id="type" name="type" required>
-            <option value="gravado">Gravado</option>
-            <option value="online">Online</option>
+            <option value="gravado">Assíncrono</option>
+            <option value="online">Síncrono</option>
           </select>
 
           <label for="description">Descrição</label>
@@ -132,6 +125,6 @@
       </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>

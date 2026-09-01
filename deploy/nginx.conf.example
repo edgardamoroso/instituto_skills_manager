@@ -1,0 +1,36 @@
+# nginx — proxy reverso com TLS para o Instituto Skills Manager.
+# Certificado via certbot (Let's Encrypt). Ajuste server_name e os caminhos dos certificados.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name cursos.seudominio.com.br;
+    # Redireciona todo HTTP para HTTPS.
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name cursos.seudominio.com.br;
+
+    ssl_certificate     /etc/letsencrypt/live/cursos.seudominio.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cursos.seudominio.com.br/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+
+    # O app já envia HSTS quando NODE_ENV=production; esta linha reforça na borda.
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+
+    client_max_body_size 15m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto https;
+        proxy_read_timeout 60s;
+    }
+}

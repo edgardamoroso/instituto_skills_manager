@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" role="img" aria-label="Instituto Skills Manager">
+  <g fill="none">
+    <!-- bars -->
+    <g fill="#14213D">
+      <rect x="8"  y="70" width="20" height="42" rx="9"/>
+      <rect x="40" y="54" width="20" height="58" rx="9"/>
+      <rect x="72" y="38" width="20" height="74" rx="9"/>
+      <rect x="104" y="24" width="20" height="88" rx="9"/>
+    </g>
+    <!-- trend line -->
+    <polyline points="18,70 50,54 82,38 114,24 130,10"
+      stroke="#E8971E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- trend dots -->
+    <g fill="#E8971E">
+      <circle cx="18"  cy="70" r="7"/>
+      <circle cx="50"  cy="54" r="7"/>
+      <circle cx="82"  cy="38" r="7"/>
+      <circle cx="114" cy="24" r="7"/>
+      <circle cx="131" cy="9"  r="8"/>
+    </g>
+  </g>
+  <text x="158" y="44" font-family="Inter, 'Segoe UI', Arial, sans-serif"
+    font-size="22" font-weight="600" letter-spacing="7" fill="#A97C2A">INSTITUTO</text>
+  <text x="156" y="95" font-family="Inter, 'Segoe UI', Arial, sans-serif"
+    font-size="52" fill="#14213D">
+    <tspan font-weight="800">Skills</tspan><tspan font-weight="400"> Manager</tspan>
+  </text>
+</svg>

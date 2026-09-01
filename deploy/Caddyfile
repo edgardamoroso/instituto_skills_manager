@@ -1,0 +1,21 @@
+# Caddy 2 — TLS automático (Let's Encrypt) + proxy reverso para o Node.
+# Uso: coloque este arquivo em /etc/caddy/Caddyfile, ajuste o domínio, e `systemctl reload caddy`.
+
+cursos.seudominio.com.br {
+    encode zstd gzip
+
+    # Repassa para o Node (que escuta em 127.0.0.1:3000).
+    reverse_proxy 127.0.0.1:3000 {
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-Host {host}
+    }
+
+    # Limite de corpo (uploads de aula são até 10 MB no app).
+    request_body {
+        max_size 15MB
+    }
+
+    log {
+        output file /var/log/caddy/skills-manager.log
+    }
+}

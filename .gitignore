@@ -1,0 +1,21 @@
+# dependências e uploads
+backend/node_modules/
+backend/uploads/
+backend/backend/uploads/
+node_modules/
+
+# banco SQLite (recriado no boot)
+backend/data/*.db
+backend/data/*.db-journal
+backend/data/*.db-wal
+backend/data/*.db-shm
+
+# configuração local
+.env
+
+# ferramentas de IA / editor (config local)
+.claude/
+.agents/
+.codex/
+.impeccable/
+.DS_Store

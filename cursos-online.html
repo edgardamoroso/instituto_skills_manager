@@ -3,28 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cursos Online | Instituto Skills Manager</title>
+    <title>Cursos Síncronos | Instituto Skills Manager</title>
     <meta
       name="description"
-      content="Participe de cursos online ao vivo do Instituto Skills Manager."
+      content="Participe de cursos síncronos ao vivo do Instituto Skills Manager."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="assets/fonts.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-page="online">
     <header class="site-header">
       <nav class="container nav">
-        <a class="brand" href="index.html"><span>Instituto</span> Skills Manager</a>
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
         <div class="nav-links">
           <a href="index.html" class="nav-link">Início</a>
-          <a href="cursos-gravados.html" class="nav-link">Cursos gravados</a>
-          <a href="cursos-online.html" class="nav-link active">Cursos online</a>
-          <a href="admin.html" class="nav-link">Administrador</a>
+          <a href="cursos-gravados.html" class="nav-link">Cursos assíncronos</a>
+          <a href="cursos-online.html" class="nav-link active">Cursos síncronos</a>
         </div>
       </nav>
     </header>
@@ -33,7 +27,7 @@
       <section class="hero-grid page-hero">
         <div>
           <p class="eyebrow">Aprenda ao vivo</p>
-          <h1>Turmas online com acompanhamento e interação</h1>
+          <h1>Cursos síncronos com acompanhamento e interação</h1>
           <p class="hero-text">
             Participe de encontros com mentores, grupo de estudos e exercícios guiados.
           </p>
@@ -41,14 +35,14 @@
         </div>
         <img
           src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80"
-          alt="Sala de aula online"
+          alt="Sala de aula síncrona"
           class="hero-image"
         />
       </section>
 
       <section class="section-stack">
         <div class="section-header">
-          <h2>Próximos cursos online</h2>
+          <h2>Próximos cursos síncronos</h2>
           <p>Escolha uma formação ao vivo e participe em tempo real.</p>
         </div>
         <div id="online-list" class="cards-grid"></div>
@@ -61,6 +55,6 @@
       </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>
