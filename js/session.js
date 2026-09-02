@@ -36,15 +36,20 @@ export async function renderAuthNav() {
 
   if (user) {
     const isAdmin = user.role === 'admin';
+    const isAuthor = user.role === 'author';
     const hasAdminNav = navLinks.querySelector('a[href="matriculas.html"], a[href="admin.html"]');
     const adminLink = isAdmin && !hasAdminNav
       ? '<a href="matriculas.html" class="nav-link">Painel admin</a>'
       : '';
-    const studentLink = !isAdmin
+    const authorLink = isAuthor
+      ? '<a href="meus-cursos.html" class="nav-link">Meus cursos</a>'
+      : '';
+    const studentLink = !isAdmin && !isAuthor
       ? '<a href="inscricao.html" class="nav-link">Minhas matrículas</a>'
       : '';
     slot.innerHTML = `
       ${adminLink}
+      ${authorLink}
       ${studentLink}
       <a href="conta.html" class="nav-link nav-user">${escapeHtml(user.name)}</a>
       <a href="#" class="nav-link" data-action="logout">Sair</a>`;
@@ -67,6 +72,16 @@ export async function renderAuthNav() {
 export async function guardAdmin() {
   const user = await currentUser();
   if (!user || user.role !== 'admin') {
+    const next = encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search);
+    window.location.href = `login.html?next=${next}`;
+    return null;
+  }
+  return user;
+}
+
+export async function guardCourseEditor() {
+  const user = await currentUser();
+  if (!user || (user.role !== 'admin' && user.role !== 'author')) {
     const next = encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search);
     window.location.href = `login.html?next=${next}`;
     return null;

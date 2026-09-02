@@ -10,9 +10,10 @@ import {
   getCourse,
   getCourseContent,
   getCourses,
+  listCoursesByAuthor,
   updateCourse,
 } from '../services/courseService.js';
-import { requireAdmin, requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireCourseEditor } from '../middleware/auth.js';
 import { badRequest } from '../lib/errors.js';
 import { httpUrl, oneOf, str } from '../lib/validate.js';
 import { audit } from '../lib/audit.js';
@@ -52,31 +53,36 @@ function handleUpload(request, response, next) {
 
 router.get('/', wrap((_request, response) => response.json(getCourses())));
 
+router.get('/mine', requireCourseEditor, wrap((request, response) => {
+  const courses = request.user.role === 'admin' ? getCourses() : listCoursesByAuthor(request.user.id);
+  response.json(courses);
+}));
+
 router.get('/:courseId', wrap((request, response) => response.json(getCourse(request.params.courseId))));
 
 router.get('/:courseId/content', requireAuth, wrap((request, response) => {
   response.json(getCourseContent(request.params.courseId, request.user));
 }));
 
-router.post('/', requireAdmin, wrap((request, response) => {
-  const course = createCourse(request.body);
+router.post('/', requireCourseEditor, wrap((request, response) => {
+  const course = createCourse(request.body, request.user);
   audit('course.create', { request, target: course.id, detail: course.title });
   response.status(201).json(course);
 }));
 
-router.patch('/:courseId', requireAdmin, wrap((request, response) => {
-  const course = updateCourse(request.params.courseId, request.body);
+router.patch('/:courseId', requireCourseEditor, wrap((request, response) => {
+  const course = updateCourse(request.params.courseId, request.body, request.user);
   audit('course.update', { request, target: course.id });
   response.json(course);
 }));
 
-router.delete('/:courseId', requireAdmin, wrap((request, response) => {
-  deleteCourse(request.params.courseId);
+router.delete('/:courseId', requireCourseEditor, wrap((request, response) => {
+  deleteCourse(request.params.courseId, request.user);
   audit('course.delete', { request, target: request.params.courseId });
   response.status(204).end();
 }));
 
-router.post('/:courseId/lessons', requireAdmin, handleUpload, wrap((request, response) => {
+router.post('/:courseId/lessons', requireCourseEditor, handleUpload, wrap((request, response) => {
   const resourceType = oneOf(request.body.resourceType, ['video', 'pdf', 'link', 'file'], { code: 'INVALID_RESOURCE_TYPE' });
   let resource;
   let resourceName = '';
@@ -92,13 +98,13 @@ router.post('/:courseId/lessons', requireAdmin, handleUpload, wrap((request, res
     resourceType,
     resource,
     resourceName,
-  });
+  }, request.user);
   audit('lesson.create', { request, target: request.params.courseId, detail: lesson.title });
   response.status(201).json(lesson);
 }));
 
-router.delete('/:courseId/lessons/:lessonId', requireAdmin, wrap((request, response) => {
-  deleteLesson(request.params.courseId, request.params.lessonId);
+router.delete('/:courseId/lessons/:lessonId', requireCourseEditor, wrap((request, response) => {
+  deleteLesson(request.params.courseId, request.params.lessonId, request.user);
   audit('lesson.delete', { request, target: request.params.lessonId });
   response.status(204).end();
 }));

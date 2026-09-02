@@ -51,3 +51,10 @@ export function requireAdmin(request, _response, next) {
   if (request.user.role !== 'admin') return next(forbidden());
   next();
 }
+
+// Admin ou autor. O escopo do autor (só os próprios cursos) é verificado no serviço.
+export function requireCourseEditor(request, _response, next) {
+  if (!request.user) return next(unauthorized());
+  if (request.user.role !== 'admin' && request.user.role !== 'author') return next(forbidden());
+  next();
+}

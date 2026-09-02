@@ -12,6 +12,7 @@ function courseCard(course) {
       <div class="meta">
         <span>⏱ ${escapeHtml(course.duration)}</span>
         <span>💸 ${formatBRL(course.priceCents)}</span>
+        ${course.author ? `<span>✍ ${escapeHtml(course.author.name)}</span>` : ''}
       </div>
       <span class="card-link">Ver conteúdo do curso →</span>
     </a>`;

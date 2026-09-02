@@ -14,10 +14,11 @@ export async function initAccountPage() {
   const user = await requireLogin();
   if (!user) return;
 
+  const roleLabels = { admin: 'administrador', author: 'autor', student: 'aluno' };
   const identity = document.getElementById('account-identity');
   if (identity) {
     identity.innerHTML = `Você está logado como <strong>${escapeHtml(user.name)}</strong> `
-      + `(${escapeHtml(user.email)}) — perfil ${user.role === 'admin' ? 'administrador' : 'aluno'}.`;
+      + `(${escapeHtml(user.email)}) — perfil ${roleLabels[user.role] || 'aluno'}.`;
   }
 
   const feedback = document.getElementById('password-feedback');

@@ -5,15 +5,17 @@ import { badRequest, notFound, unauthorized, forbidden } from '../lib/errors.js'
 import { str, optionalStr, oneOf } from '../lib/validate.js';
 
 const listCoursesStmt = db.prepare('SELECT * FROM courses ORDER BY created_at DESC, title ASC');
+const listCoursesByAuthorStmt = db.prepare('SELECT * FROM courses WHERE author_id = ? ORDER BY created_at DESC, title ASC');
 const getCourseStmt = db.prepare('SELECT * FROM courses WHERE id = ?');
+const getAuthorStmt = db.prepare("SELECT id, name, bio FROM users WHERE id = ? AND role = 'author'");
 const listLessonsStmt = db.prepare('SELECT * FROM lessons WHERE course_id = ? ORDER BY position ASC, rowid ASC');
 const insertCourseStmt = db.prepare(
-  `INSERT INTO courses (id, title, type, description, duration, price_cents)
-   VALUES (@id, @title, @type, @description, @duration, @price_cents)`,
+  `INSERT INTO courses (id, title, type, description, duration, price_cents, author_id)
+   VALUES (@id, @title, @type, @description, @duration, @price_cents, @author_id)`,
 );
 const updateCourseStmt = db.prepare(
   `UPDATE courses SET title = @title, type = @type, description = @description,
-   duration = @duration, price_cents = @price_cents WHERE id = @id`,
+   duration = @duration, price_cents = @price_cents, author_id = @author_id WHERE id = @id`,
 );
 const deleteCourseStmt = db.prepare('DELETE FROM courses WHERE id = ?');
 const insertLessonStmt = db.prepare(
@@ -23,7 +25,7 @@ const insertLessonStmt = db.prepare(
 const deleteLessonStmt = db.prepare('DELETE FROM lessons WHERE id = ? AND course_id = ?');
 const maxPositionStmt = db.prepare('SELECT COALESCE(MAX(position), 0) AS maxPos FROM lessons WHERE course_id = ?');
 const activeEnrollmentStmt = db.prepare(
-  "SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?",
+  'SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?',
 );
 
 function lessonToApi(row) {
@@ -37,6 +39,11 @@ function lessonToApi(row) {
   };
 }
 
+function authorToApi(authorId) {
+  if (!authorId) return null;
+  return getAuthorStmt.get(authorId) || null;
+}
+
 function courseToApi(row, { withLessons = false } = {}) {
   const course = {
     id: row.id,
@@ -45,6 +52,7 @@ function courseToApi(row, { withLessons = false } = {}) {
     description: row.description,
     duration: row.duration,
     priceCents: row.price_cents,
+    author: authorToApi(row.author_id),
   };
   if (withLessons) {
     course.lessons = listLessonsStmt.all(row.id).map(lessonToApi);
@@ -68,12 +76,28 @@ function normalizeCourseInput(input = {}) {
   };
 }
 
-function assertCourseInput(data) {
-  if (!data.title || !data.description || !data.duration) throw badRequest('COURSE_FIELDS_REQUIRED');
+// Resolve o author_id conforme quem está agindo.
+// Autor: sempre ele mesmo. Admin: o que vier no input (validado), ou mantém o atual.
+function resolveAuthorId(input, actor, currentAuthorId) {
+  if (actor?.role === 'author') return actor.id;
+  if (input.authorId === undefined) return currentAuthorId ?? null;
+  if (!input.authorId) return null;
+  if (!getAuthorStmt.get(input.authorId)) throw badRequest('COURSE_AUTHOR_INVALID');
+  return input.authorId;
+}
+
+function assertCourseOwnership(courseRow, actor) {
+  if (actor?.role === 'admin') return;
+  if (actor?.role === 'author' && courseRow.author_id === actor.id) return;
+  throw forbidden('COURSE_FORBIDDEN');
 }
 
 export function getCourses() {
   return listCoursesStmt.all().map((row) => courseToApi(row));
+}
+
+export function listCoursesByAuthor(authorId) {
+  return listCoursesByAuthorStmt.all(authorId).map((row) => courseToApi(row));
 }
 
 export function getCourse(courseId) {
@@ -82,32 +106,36 @@ export function getCourse(courseId) {
   return courseToApi(row, { withLessons: true });
 }
 
-export function createCourse(input) {
+export function createCourse(input, actor) {
   const data = normalizeCourseInput(input);
-  assertCourseInput(data);
   const id = crypto.randomUUID();
-  insertCourseStmt.run({ id, ...data });
+  insertCourseStmt.run({ id, ...data, author_id: resolveAuthorId(input, actor, null) });
   return getCourse(id);
 }
 
-export function updateCourse(courseId, input) {
-  if (!getCourseStmt.get(courseId)) throw notFound('COURSE_NOT_FOUND');
+export function updateCourse(courseId, input, actor) {
+  const row = getCourseStmt.get(courseId);
+  if (!row) throw notFound('COURSE_NOT_FOUND');
+  assertCourseOwnership(row, actor);
   const data = normalizeCourseInput(input);
-  assertCourseInput(data);
-  updateCourseStmt.run({ id: courseId, ...data });
+  updateCourseStmt.run({ id: courseId, ...data, author_id: resolveAuthorId(input, actor, row.author_id) });
   return getCourse(courseId);
 }
 
-export function deleteCourse(courseId) {
-  if (!getCourseStmt.get(courseId)) throw notFound('COURSE_NOT_FOUND');
+export function deleteCourse(courseId, actor) {
+  const row = getCourseStmt.get(courseId);
+  if (!row) throw notFound('COURSE_NOT_FOUND');
+  assertCourseOwnership(row, actor);
   deleteCourseStmt.run(courseId);
 }
 
-export function addLesson(courseId, lesson) {
-  if (!getCourseStmt.get(courseId)) throw notFound('COURSE_NOT_FOUND');
+export function addLesson(courseId, lesson, actor) {
+  const row = getCourseStmt.get(courseId);
+  if (!row) throw notFound('COURSE_NOT_FOUND');
+  assertCourseOwnership(row, actor);
   const title = str(lesson.title, { code: 'LESSON_FIELDS_REQUIRED', min: 1, max: 160 });
   const resource = str(lesson.resource, { code: 'LESSON_FIELDS_REQUIRED', min: 1, max: 2000 });
-  const row = {
+  const stored = {
     id: crypto.randomUUID(),
     course_id: courseId,
     title,
@@ -117,12 +145,14 @@ export function addLesson(courseId, lesson) {
     resource_name: optionalStr(lesson.resourceName, { max: 200 }),
     position: maxPositionStmt.get(courseId).maxPos + 1,
   };
-  insertLessonStmt.run(row);
-  return lessonToApi(row);
+  insertLessonStmt.run(stored);
+  return lessonToApi(stored);
 }
 
-export function deleteLesson(courseId, lessonId) {
-  if (!getCourseStmt.get(courseId)) throw notFound('COURSE_NOT_FOUND');
+export function deleteLesson(courseId, lessonId, actor) {
+  const row = getCourseStmt.get(courseId);
+  if (!row) throw notFound('COURSE_NOT_FOUND');
+  assertCourseOwnership(row, actor);
   deleteLessonStmt.run(lessonId, courseId);
 }
 

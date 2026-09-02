@@ -1,5 +1,5 @@
 import { api, ApiError } from './api.js';
-import { guardAdmin } from './session.js';
+import { guardCourseEditor } from './session.js';
 import { formatBRL, courseTypeLabel, escapeHtml } from './format.js';
 
 const resourceLabels = { video: 'Vídeo', pdf: 'PDF', link: 'Link externo', file: 'Arquivo' };
@@ -11,13 +11,37 @@ const resourceLabels = { video: 'Vídeo', pdf: 'PDF', link: 'Link externo', file
 export async function initAdminCourses() {
   const form = document.getElementById('course-form');
   if (!form) return;
-  if (!(await guardAdmin())) return;
+  const user = await guardCourseEditor();
+  if (!user) return;
+
+  const isAuthor = user.role === 'author';
+  const mineOnly = document.body.dataset.page === 'my-courses' || isAuthor;
+  const loadCourses = () => (mineOnly ? api.coursesMine() : api.courses());
 
   const formTitle = document.getElementById('form-title');
   const courseIdInput = document.getElementById('course-id');
   const cancelButton = document.getElementById('cancel-edit');
   const list = document.getElementById('admin-course-list');
   const count = document.getElementById('course-count');
+  let authorSelect = document.getElementById('course-author');
+
+  if (authorSelect && isAuthor) {
+    // Autor não escolhe autor: o backend força o próprio id.
+    authorSelect.previousElementSibling?.remove();
+    authorSelect.remove();
+    authorSelect = null;
+  } else if (authorSelect) {
+    try {
+      for (const author of await api.authors()) {
+        const option = document.createElement('option');
+        option.value = author.id;
+        option.textContent = author.name;
+        authorSelect.append(option);
+      }
+    } catch {
+      /* dropdown de autor é acessório */
+    }
+  }
 
   const lessonManager = document.getElementById('lesson-manager');
   const lessonForm = document.getElementById('lesson-form');
@@ -45,6 +69,7 @@ export async function initAdminCourses() {
             <p>${escapeHtml(course.description)}</p>
             <span class="badge">${courseTypeLabel(course.type)}</span>
             <span class="badge">${formatBRL(course.priceCents)}</span>
+            ${course.author ? `<span class="badge">Autor: ${escapeHtml(course.author.name)}</span>` : ''}
             <span class="lesson-summary">${course.lessonCount} ${course.lessonCount === 1 ? 'aula cadastrada' : 'aulas cadastradas'}</span>
           </div>
           <div class="actions">
@@ -58,7 +83,7 @@ export async function initAdminCourses() {
   }
 
   async function reload() {
-    courses = await api.courses();
+    courses = await loadCourses();
     render();
     if (managingCourseId && !courses.some((course) => course.id === managingCourseId)) {
       lessonManager.hidden = true;
@@ -102,6 +127,7 @@ export async function initAdminCourses() {
       duration: data.get('duration'),
       price: data.get('price'),
     };
+    if (authorSelect) payload.authorId = data.get('authorId') || '';
     try {
       if (editingId) {
         await api.updateCourse(editingId, payload);
@@ -135,6 +161,7 @@ export async function initAdminCourses() {
       document.getElementById('description').value = full.description;
       document.getElementById('duration').value = full.duration;
       document.getElementById('price').value = formatBRL(full.priceCents);
+      if (authorSelect) authorSelect.value = full.author?.id || '';
       formTitle.textContent = 'Editar curso';
       document.getElementById('title').focus();
     }
@@ -207,20 +234,22 @@ export async function initAdminCourses() {
 export async function initCourseEditor() {
   const root = document.getElementById('course-editor-page');
   if (!root) return;
-  if (!(await guardAdmin())) return;
+  const user = await guardCourseEditor();
+  if (!user) return;
+  const backHref = user.role === 'author' ? 'meus-cursos.html' : 'admin.html';
 
   const courseId = new URLSearchParams(window.location.search).get('id');
   let course;
   try {
     course = await api.course(courseId);
   } catch {
-    root.innerHTML = '<p class="empty-state">Curso não encontrado. <a href="admin.html">Voltar ao administrador</a></p>';
+    root.innerHTML = `<p class="empty-state">Curso não encontrado. <a href="${backHref}">Voltar</a></p>`;
     return;
   }
 
   root.innerHTML = `
     <section class="course-heading">
-      <a class="back-link" href="admin.html">← Voltar ao administrador</a>
+      <a class="back-link" href="${backHref}">← Voltar</a>
       <span class="type-pill">Editor de conteúdo</span>
       <h1>${escapeHtml(course.title)}</h1>
       <p class="course-description">Cadastre e organize as aulas deste curso.</p>

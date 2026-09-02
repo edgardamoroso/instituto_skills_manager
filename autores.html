@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autores | Instituto Skills Manager</title>
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="authors">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="admin.html" class="nav-link">Cursos</a>
+          <a href="alunos.html" class="nav-link">Alunos</a>
+          <a href="autores.html" class="nav-link active">Autores</a>
+          <a href="matriculas.html" class="nav-link">Matrículas</a>
+        </div>
+      </nav>
+    </header>
+    <main class="container page-shell">
+      <section class="course-heading">
+        <p class="eyebrow">Área administrativa</p>
+        <h1>Autores</h1>
+        <p class="course-description">
+          Cadastre autores e dê a eles acesso para criar e editar os próprios cursos. O autor
+          recebe um e-mail para definir a senha.
+        </p>
+      </section>
+      <section class="admin-layout">
+        <form id="author-form" class="panel">
+          <h2 id="author-form-title">Cadastrar autor</h2>
+          <input type="hidden" id="author-id" />
+          <label for="author-name">Nome</label>
+          <input id="author-name" name="name" required />
+          <label for="author-email">E-mail</label>
+          <input id="author-email" name="email" type="email" autocomplete="email" required />
+          <label for="author-bio">Bio (opcional)</label>
+          <textarea id="author-bio" name="bio" rows="3"></textarea>
+          <button class="btn btn-primary btn-full" type="submit">Salvar autor</button>
+          <button class="btn btn-secondary btn-full" type="button" id="cancel-author-edit">Cancelar</button>
+          <p id="author-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+        </form>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Autores cadastrados</h2>
+            <span id="author-count" class="badge"></span>
+          </div>
+          <div id="author-list" class="admin-list"></div>
+        </section>
+      </section>
+    </main>
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
