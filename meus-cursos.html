@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meus cursos | Instituto Skills Manager</title>
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="my-courses">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Início</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container page-shell">
+      <section class="course-heading">
+        <p class="eyebrow">Área do autor</p>
+        <h1>Meus cursos</h1>
+        <p class="course-description">Crie e edite os cursos que você assina. As matrículas e pagamentos ficam com a administração.</p>
+      </section>
+
+      <section class="section-stack admin-layout">
+        <form id="course-form" class="panel">
+          <h3 id="form-title">Adicionar curso</h3>
+          <input type="hidden" id="course-id" />
+
+          <label for="title">Nome do curso</label>
+          <input id="title" name="title" type="text" required />
+
+          <label for="type">Tipo</label>
+          <select id="type" name="type" required>
+            <option value="gravado">Assíncrono</option>
+            <option value="online">Síncrono</option>
+          </select>
+
+          <label for="description">Descrição</label>
+          <textarea id="description" name="description" rows="3" required></textarea>
+
+          <label for="duration">Duração</label>
+          <input id="duration" name="duration" type="text" required />
+
+          <label for="price">Preço</label>
+          <input id="price" name="price" type="text" required />
+
+          <button type="submit" class="btn btn-primary btn-full">Salvar curso</button>
+          <button type="button" id="cancel-edit" class="btn btn-secondary btn-full">Cancelar</button>
+        </form>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Meus cursos</h3>
+            <span id="course-count" class="badge"></span>
+          </div>
+          <div id="admin-course-list" class="admin-list"></div>
+        </div>
+      </section>
+
+      <section id="lesson-manager" class="section-stack panel lesson-manager" hidden>
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Conteúdo do curso</p>
+            <h2 id="lesson-course-title">Aulas</h2>
+          </div>
+          <button type="button" id="close-lesson-manager" class="btn btn-secondary">Fechar</button>
+        </div>
+        <form id="lesson-form" class="lesson-form">
+          <input type="hidden" id="lesson-id" />
+          <label for="lesson-title">Título da aula</label>
+          <input id="lesson-title" name="lessonTitle" type="text" required />
+          <label for="lesson-description">Descrição da aula</label>
+          <textarea id="lesson-description" name="lessonDescription" rows="2"></textarea>
+          <div class="lesson-fields">
+            <div>
+              <label for="lesson-resource-type">Tipo de recurso</label>
+              <select id="lesson-resource-type" name="resourceType">
+                <option value="video">Vídeo por link</option>
+                <option value="pdf">PDF por link</option>
+                <option value="link">Link externo</option>
+                <option value="file">Arquivo do computador</option>
+              </select>
+            </div>
+            <div>
+              <label for="lesson-resource">URL do recurso</label>
+              <input id="lesson-resource" name="resourceUrl" type="url" placeholder="https://..." />
+            </div>
+          </div>
+          <label for="lesson-file">Ou selecione um arquivo</label>
+          <input id="lesson-file" name="resourceFile" type="file" />
+          <div class="lesson-actions">
+            <button type="submit" class="btn btn-primary">Adicionar aula</button>
+            <button type="button" id="cancel-lesson-edit" class="btn btn-secondary">Limpar</button>
+          </div>
+        </form>
+        <div id="lesson-list" class="lesson-list"></div>
+      </section>
+    </main>
+
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

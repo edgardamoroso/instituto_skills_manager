@@ -101,6 +101,7 @@ export async function initCoursePage() {
       <span class="type-pill">${course.type === 'gravado' ? 'Curso assíncrono' : 'Curso síncrono'}</span>
       <h1>${escapeHtml(course.title)}</h1>
       <p class="course-description">${escapeHtml(course.description)}</p>
+      ${course.author ? `<p class="course-author">Autor: <strong>${escapeHtml(course.author.name)}</strong>${course.author.bio ? ` — ${escapeHtml(course.author.bio)}` : ''}</p>` : ''}
       <div class="meta">
         <span>⏱ ${escapeHtml(course.duration)}</span>
         <span>💸 ${formatBRL(course.priceCents)}</span>

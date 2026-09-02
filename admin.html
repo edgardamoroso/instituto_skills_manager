@@ -18,6 +18,7 @@
         <div class="nav-links">
           <a href="admin.html" class="nav-link active">Cursos</a>
           <a href="alunos.html" class="nav-link">Alunos</a>
+          <a href="autores.html" class="nav-link">Autores</a>
           <a href="matriculas.html" class="nav-link">Matrículas</a>
         </div>
       </nav>
@@ -63,6 +64,11 @@
 
           <label for="price">Preço</label>
           <input id="price" name="price" type="text" required />
+
+          <label for="course-author">Autor</label>
+          <select id="course-author" name="authorId">
+            <option value="">Sem autor</option>
+          </select>
 
           <button type="submit" class="btn btn-primary btn-full">Salvar curso</button>
           <button type="button" id="cancel-edit" class="btn btn-secondary btn-full">Cancelar</button>

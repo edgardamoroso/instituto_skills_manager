@@ -15,3 +15,14 @@ export function tokenFromEmail(message) {
   const match = /[?&]token=([a-f0-9]+)/i.exec(message?.text || '');
   return match ? match[1] : null;
 }
+
+// Cria um autor via admin, consome o convite e devolve um client logado como esse autor.
+export async function makeAuthorClient({ server, createClient, admin, sentMessages, clearOutbox, name = 'Autor' }) {
+  clearOutbox();
+  const email = `author-${Date.now()}-${Math.random().toString(36).slice(2)}@ex.com`;
+  const created = await admin.post('/api/authors', { body: { name, email, bio: 'bio do autor' } });
+  const token = tokenFromEmail(sentMessages[0]);
+  const client = createClient(server.baseUrl);
+  await client.post('/api/auth/set-password', { body: { token, password: 'senha-forte-1' } });
+  return { client, id: created.body.id, email };
+}

@@ -455,6 +455,12 @@ legend {
   color: var(--muted);
 }
 
+.course-author {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .lesson-form {
   margin-top: 1.3rem;
   padding-top: 1.3rem;

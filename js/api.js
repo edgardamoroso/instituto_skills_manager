@@ -42,12 +42,14 @@ export const api = {
   register: (body) => request('/auth/register', { method: 'POST', body }),
   verifyEmail: (token) => request('/auth/verify-email', { method: 'POST', body: { token } }),
   resendVerification: (email) => request('/auth/resend-verification', { method: 'POST', body: { email } }),
+  setPassword: (token, password) => request('/auth/set-password', { method: 'POST', body: { token, password } }),
   changePassword: (currentPassword, newPassword) =>
     request('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } }),
   logout: () => request('/auth/logout', { method: 'POST' }),
 
   // cursos
   courses: () => request('/courses'),
+  coursesMine: () => request('/courses/mine'),
   course: (id) => request(`/courses/${id}`),
   createCourse: (body) => request('/courses', { method: 'POST', body }),
   updateCourse: (id, body) => request(`/courses/${id}`, { method: 'PATCH', body }),
@@ -55,6 +57,13 @@ export const api = {
   courseContent: (id) => request(`/courses/${id}/content`),
   addLesson: (id, form) => request(`/courses/${id}/lessons`, { method: 'POST', form }),
   deleteLesson: (id, lessonId) => request(`/courses/${id}/lessons/${lessonId}`, { method: 'DELETE' }),
+
+  // autores
+  authors: () => request('/authors'),
+  createAuthor: (body) => request('/authors', { method: 'POST', body }),
+  updateAuthor: (id, body) => request(`/authors/${id}`, { method: 'PATCH', body }),
+  reinviteAuthor: (id) => request(`/authors/${id}/reinvite`, { method: 'POST' }),
+  deleteAuthor: (id) => request(`/authors/${id}`, { method: 'DELETE' }),
 
   // alunos
   students: () => request('/students'),

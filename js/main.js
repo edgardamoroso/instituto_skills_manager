@@ -7,6 +7,8 @@ import { initEnrollmentsPage } from './admin-enrollments.js';
 import { initEnrollRequestPage } from './enroll-request.js';
 import { initLoginPage, initSignupPage, initVerifyEmailPage } from './auth-pages.js';
 import { initAccountPage } from './account.js';
+import { initAdminAuthors } from './admin-authors.js';
+import { initSetPasswordPage } from './set-password.js';
 
 const routes = {
   home: initCatalog,
@@ -14,13 +16,16 @@ const routes = {
   online: initCatalog,
   course: initCoursePage,
   admin: initAdminCourses,
+  'my-courses': initAdminCourses,
   'course-admin': initCourseEditor,
   students: initAdminStudents,
+  authors: initAdminAuthors,
   enrollments: initEnrollmentsPage,
   enrollment: initEnrollRequestPage,
   login: initLoginPage,
   signup: initSignupPage,
   'verify-email': initVerifyEmailPage,
+  'set-password': initSetPasswordPage,
   account: initAccountPage,
 };
 
