@@ -47,6 +47,15 @@ export function uid() {
   return crypto.randomUUID();
 }
 
+// Fecha a conexão. Usado nos testes para liberar o arquivo temporário antes de removê-lo.
+export function closeDatabase() {
+  try {
+    db.close();
+  } catch {
+    /* já fechada */
+  }
+}
+
 // node:sqlite não tem helper de transação como o better-sqlite3.
 export function transaction(run) {
   db.exec('BEGIN');
