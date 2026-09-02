@@ -24,6 +24,8 @@ const insertEmailToken = db.prepare(
 );
 const getEmailToken = db.prepare("SELECT * FROM email_tokens WHERE token = ? AND purpose = 'verify'");
 const deleteEmailTokensForUser = db.prepare("DELETE FROM email_tokens WHERE user_id = ? AND purpose = 'verify'");
+const getPasswordSetToken = db.prepare("SELECT * FROM email_tokens WHERE token = ? AND purpose = 'set_password'");
+const deletePasswordSetTokensForUser = db.prepare("DELETE FROM email_tokens WHERE user_id = ? AND purpose = 'set_password'");
 const markVerified = db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?');
 const getUserWithHash = db.prepare('SELECT id, password_hash FROM users WHERE id = ?');
 const setPassword = db.prepare('UPDATE users SET password_hash = ? WHERE id = ?');
@@ -51,6 +53,33 @@ function issueVerification(user) {
     subject: 'Confirme seu e-mail — Instituto Skills Manager',
     text: `Olá, ${user.name}.\n\nConfirme seu e-mail para ativar sua conta:\n${link}\n\nO link expira em 24 horas. Se você não criou esta conta, ignore este e-mail.`,
   });
+}
+
+// Convite para o autor definir a própria senha (reaproveita email_tokens).
+export function issuePasswordSet(user) {
+  deletePasswordSetTokensForUser.run(user.id);
+  const token = crypto.randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 72 * 3600 * 1000).toISOString();
+  insertEmailToken.run(token, user.id, 'set_password', expiresAt);
+  const link = `${config.publicUrl}/definir-senha.html?token=${token}`;
+  sendMail({
+    to: user.email,
+    subject: 'Defina sua senha — Instituto Skills Manager',
+    text: `Olá, ${user.name}.\n\nVocê foi cadastrado como autor. Defina sua senha de acesso:\n${link}\n\nO link expira em 72 horas.`,
+  });
+}
+
+export function completePasswordSet(token, newPassword) {
+  const row = getPasswordSetToken.get(String(token || ''));
+  if (!row || Date.parse(row.expires_at) < Date.now()) throw badRequest('PASSWORD_SET_INVALID');
+  const password = String(newPassword ?? '');
+  if (password.length < 8 || password.length > 200) throw badRequest('PASSWORD_TOO_SHORT');
+  setPassword.run(hashPassword(password), row.user_id);
+  markVerified.run(row.user_id);
+  deletePasswordSetTokensForUser.run(row.user_id);
+  const dbUser = getUserById.get(row.user_id);
+  const session = createSession(dbUser.id);
+  return { user: publicUser(dbUser), session };
 }
 
 export function register(input) {
@@ -111,6 +140,7 @@ export function login({ email: emailInput, password }) {
     ? verifyPassword(password, row.password_hash)
     : (verifyPassword(password, DUMMY_HASH), false);
   if (!ok) throw unauthorized('INVALID_CREDENTIALS');
+  if (row.active === 0) throw unauthorized('ACCOUNT_DISABLED');
   if (!row.email_verified) throw unauthorized('EMAIL_NOT_VERIFIED');
   const session = createSession(row.id);
   return { user: publicUser(row), session };

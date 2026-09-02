@@ -9,6 +9,7 @@ import { sameOrigin } from './middleware/sameOrigin.js';
 import { rateLimit } from './middleware/rateLimit.js';
 import { errorHandler } from './lib/http.js';
 import authRoutes from './routes/authRoutes.js';
+import authorRoutes from './routes/authorRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import enrollmentRoutes from './routes/enrollmentRoutes.js';
@@ -53,6 +54,7 @@ app.use('/uploads', (request, response, next) => {
 app.use('/api', rateLimit({ name: 'api-ip', limit: 300, windowMs: 60 * 1000 }));
 app.use('/api', sameOrigin);
 app.use('/api/auth', authRoutes);
+app.use('/api/authors', authorRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/enrollments', enrollmentRoutes);

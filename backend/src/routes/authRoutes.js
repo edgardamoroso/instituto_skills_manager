@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   changePassword,
+  completePasswordSet,
   login,
   logout,
   me,
@@ -29,6 +30,7 @@ function setSessionCookie(response, token) {
 const loginLimiter = rateLimit({ name: 'login-ip', limit: 10, windowMs: 15 * 60 * 1000 });
 const registerLimiter = rateLimit({ name: 'register-ip', limit: 5, windowMs: 60 * 60 * 1000 });
 const resendLimiter = rateLimit({ name: 'resend-ip', limit: 5, windowMs: 60 * 60 * 1000 });
+const setPasswordLimiter = rateLimit({ name: 'set-password-ip', limit: 10, windowMs: 15 * 60 * 1000 });
 
 router.post('/register', registerLimiter, wrap((request, response) => {
   register(request.body);
@@ -46,6 +48,13 @@ router.post('/verify-email', wrap((request, response) => {
 router.post('/resend-verification', resendLimiter, wrap((request, response) => {
   resendVerification(request.body?.email);
   response.status(202).json({ pending: true });
+}));
+
+router.post('/set-password', setPasswordLimiter, wrap((request, response) => {
+  const { user, session } = completePasswordSet(request.body?.token, request.body?.password);
+  setSessionCookie(response, session.token);
+  audit('auth.set_password', { request, actorId: user.id });
+  response.json({ user });
 }));
 
 router.post('/login', loginLimiter, wrap((request, response) => {
