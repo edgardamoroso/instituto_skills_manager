@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test --experimental-test-coverage \"test/**/*.test.js\"",
+    "test": "node --test --experimental-test-coverage --test-coverage-exclude=src/server.js --test-coverage-exclude=src/db/seed.js --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 \"test/**/*.test.js\"",
     "test:watch": "node --test --watch \"test/**/*.test.js\""
   },
   "dependencies": {
