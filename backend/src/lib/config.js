@@ -37,11 +37,12 @@ export const config = {
     pass: process.env.SMTP_PASS || '',
     from: process.env.SMTP_FROM || 'Instituto Skills Manager <no-reply@skills.local>',
   },
+  uploadsDir: process.env.UPLOADS_DIR || path.join(backendDir, 'uploads'),
   ebook: {
     downloadTtlHours: Number(process.env.EBOOK_DOWNLOAD_TTL_HOURS) || 72,
     maxDownloads: Number(process.env.EBOOK_DOWNLOAD_MAX) || 5,
     maxFileMb: Number(process.env.EBOOK_MAX_FILE_MB) || 50,
-    storageDir: path.join(backendDir, 'storage', 'ebooks'),
+    storageDir: process.env.EBOOK_STORAGE_DIR || path.join(backendDir, 'storage', 'ebooks'),
   },
 };
 

@@ -9,6 +9,9 @@ import { initLoginPage, initSignupPage, initVerifyEmailPage } from './auth-pages
 import { initAccountPage } from './account.js';
 import { initAdminAuthors } from './admin-authors.js';
 import { initSetPasswordPage } from './set-password.js';
+import { initEbookCatalog, initEbookPage } from './ebooks-catalog.js';
+import { initAdminEbooks, initEbookEditor } from './admin-ebooks.js';
+import { initAdminOrders } from './admin-orders.js';
 
 const routes = {
   home: initCatalog,
@@ -20,6 +23,11 @@ const routes = {
   'course-admin': initCourseEditor,
   students: initAdminStudents,
   authors: initAdminAuthors,
+  ebooks: initEbookCatalog,
+  ebook: initEbookPage,
+  'admin-ebooks': initAdminEbooks,
+  'ebook-admin': initEbookEditor,
+  orders: initAdminOrders,
   enrollments: initEnrollmentsPage,
   enrollment: initEnrollRequestPage,
   login: initLoginPage,

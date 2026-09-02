@@ -12,6 +12,12 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 const dbFile = path.join(os.tmpdir(), `sm-test-${crypto.randomUUID()}.db`);
 process.env.DB_FILE = dbFile;
 
+// Storage de eBooks e uploads isolados por processo — não sujar backend/ nos testes.
+const storageDir = path.join(os.tmpdir(), `sm-test-storage-${crypto.randomUUID()}`);
+const uploadsDir = path.join(os.tmpdir(), `sm-test-uploads-${crypto.randomUUID()}`);
+process.env.EBOOK_STORAGE_DIR = storageDir;
+process.env.UPLOADS_DIR = uploadsDir;
+
 // Config mínima para o app subir fora de produção.
 process.env.PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:3000';
 // Garante que os testes usem a outbox em memória, nunca um SMTP real de um .env local.
@@ -31,6 +37,13 @@ export async function removeDbFile() {
       rmSync(dbFile + suffix, { force: true });
     } catch {
       /* arquivo temporário; o SO limpa se ficar preso */
+    }
+  }
+  for (const dir of [storageDir, uploadsDir]) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {
+      /* idem */
     }
   }
 }

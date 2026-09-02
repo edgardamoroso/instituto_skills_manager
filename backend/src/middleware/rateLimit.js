@@ -49,3 +49,8 @@ export function consume(key, limit, windowMs) {
 export function reset(key) {
   buckets.delete(key);
 }
+
+// Usado nos testes para isolar cenários de rate limit.
+export function resetAll() {
+  buckets.clear();
+}
