@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { config } from '../lib/config.js';
 import {
   addLesson,
   createCourse,
@@ -20,7 +20,7 @@ import { audit } from '../lib/audit.js';
 import { wrap } from '../lib/http.js';
 
 const router = Router();
-const uploadDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads');
+const uploadDirectory = config.uploadsDir;
 
 const ALLOWED_UPLOAD_EXT = new Set(['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.txt', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.csv', '.zip']);
 const ALLOWED_UPLOAD_MIME = new Set([

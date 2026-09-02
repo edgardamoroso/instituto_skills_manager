@@ -21,7 +21,7 @@ assertProductionConfig();
 
 const backendDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const siteDirectory = path.resolve(backendDirectory, '..');
-const uploadsDirectory = path.join(backendDirectory, 'uploads');
+const uploadsDirectory = config.uploadsDir;
 
 await mkdir(uploadsDirectory, { recursive: true });
 

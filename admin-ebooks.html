@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>eBooks (admin) | Instituto Skills Manager</title>
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="admin-ebooks">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="admin.html" class="nav-link">Cursos</a>
+          <a href="autores.html" class="nav-link">Autores</a>
+          <a href="admin-ebooks.html" class="nav-link active">eBooks</a>
+          <a href="pedidos.html" class="nav-link">Pedidos</a>
+          <a href="alunos.html" class="nav-link">Alunos</a>
+          <a href="matriculas.html" class="nav-link">Matrículas</a>
+        </div>
+      </nav>
+    </header>
+    <main class="container page-shell">
+      <section class="course-heading">
+        <p class="eyebrow">Área administrativa</p>
+        <h1>eBooks</h1>
+        <p class="course-description">Cadastre eBooks para venda no site ou apontando para uma loja externa.</p>
+      </section>
+      <p><a class="btn btn-primary" href="gerenciar-ebook.html">Novo eBook</a></p>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>eBooks cadastrados</h2>
+          <span id="ebook-admin-count" class="badge"></span>
+        </div>
+        <div id="ebook-admin-list" class="admin-list"></div>
+      </section>
+    </main>
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

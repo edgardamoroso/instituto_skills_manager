@@ -1,6 +1,45 @@
 import { api, ApiError } from './api.js';
 import { requireLogin } from './session.js';
-import { escapeHtml } from './format.js';
+import { escapeHtml, formatDate } from './format.js';
+
+async function renderMyEbooks() {
+  const box = document.getElementById('my-ebooks');
+  const list = document.getElementById('my-ebooks-list');
+  if (!box || !list) return;
+  let orders = [];
+  try {
+    orders = await api.myEbookOrders();
+  } catch {
+    return;
+  }
+  if (!orders.length) return;
+  box.hidden = false;
+  list.innerHTML = orders.map((order) => `
+    <article class="admin-item" data-order="${order.id}">
+      <div>
+        <strong>${escapeHtml(order.ebook.title)}</strong>
+        <p>Entregue em ${formatDate(order.deliveredAt)}</p>
+      </div>
+      <div class="actions">
+        <button class="action-btn edit" data-download="${order.id}">Gerar link de download</button>
+      </div>
+    </article>`).join('');
+
+  list.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-download]');
+    if (!button) return;
+    const feedback = document.getElementById('my-ebooks-feedback');
+    try {
+      const { url } = await api.myEbookDownload(button.dataset.download);
+      window.open(url, '_blank', 'noopener');
+      feedback.textContent = 'Link aberto em nova aba. Ele expira em algumas horas.';
+      feedback.dataset.tone = 'ok';
+    } catch {
+      feedback.textContent = 'Não foi possível gerar o link agora.';
+      feedback.dataset.tone = 'error';
+    }
+  });
+}
 
 const errors = {
   CURRENT_PASSWORD_INVALID: 'A senha atual está incorreta.',
@@ -22,6 +61,8 @@ export async function initAccountPage() {
   }
 
   const feedback = document.getElementById('password-feedback');
+
+  renderMyEbooks();
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();

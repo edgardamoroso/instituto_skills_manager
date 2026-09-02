@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   createEbook,
   deleteEbook,
@@ -18,7 +17,7 @@ import { wrap } from '../lib/http.js';
 import { config } from '../lib/config.js';
 
 const router = Router();
-const uploadDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads');
+const uploadDirectory = config.uploadsDir;
 
 const IMAGE_MIME = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
 const DOC_EXT = new Set(['.pdf', '.epub']);

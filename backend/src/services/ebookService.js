@@ -213,7 +213,7 @@ export function resolveEbookFilePath(ebookId) {
   return { absPath: resolveProtected(row.file_path), downloadName: row.file_name || `${row.title}.pdf` };
 }
 
-const uploadsDir = path.resolve(config.ebook.storageDir, '..', '..', 'uploads');
+const uploadsDir = config.uploadsDir;
 
 function removeUpload(url) {
   if (!url || !url.startsWith('/uploads/')) return;

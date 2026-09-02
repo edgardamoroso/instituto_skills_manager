@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { db } from '../../src/db/index.js';
+import { config } from '../../src/lib/config.js';
 import {
   createEbook,
   updateEbook,
@@ -125,6 +126,6 @@ test('consumeDownload feliz: incrementa o contador e devolve o arquivo', () => {
   const grant = issueDownloadGrant(orderId);
 
   const result = consumeDownload(grant.token);
-  assert.match(result.absPath, /storage[/\\]ebooks[/\\]/);
+  assert.ok(result.absPath.startsWith(config.ebook.storageDir));
   assert.equal(db.prepare('SELECT download_count AS n FROM ebook_download_grants WHERE token = ?').get(grant.token).n, 1);
 });
