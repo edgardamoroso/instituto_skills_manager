@@ -37,6 +37,12 @@ export const config = {
     pass: process.env.SMTP_PASS || '',
     from: process.env.SMTP_FROM || 'Instituto Skills Manager <no-reply@skills.local>',
   },
+  ebook: {
+    downloadTtlHours: Number(process.env.EBOOK_DOWNLOAD_TTL_HOURS) || 72,
+    maxDownloads: Number(process.env.EBOOK_DOWNLOAD_MAX) || 5,
+    maxFileMb: Number(process.env.EBOOK_MAX_FILE_MB) || 50,
+    storageDir: path.join(backendDir, 'storage', 'ebooks'),
+  },
 };
 
 // Em produção, recusa iniciar com configuração insegura.

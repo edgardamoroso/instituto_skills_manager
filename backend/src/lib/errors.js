@@ -11,3 +11,5 @@ export const badRequest = (code) => new AppError(code, 400);
 export const unauthorized = (code = 'AUTH_REQUIRED') => new AppError(code, 401);
 export const forbidden = (code = 'FORBIDDEN') => new AppError(code, 403);
 export const conflict = (code) => new AppError(code, 409);
+export const gone = (code) => new AppError(code, 410);
+export const tooMany = (code) => new AppError(code, 429);

@@ -19,7 +19,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/skills-manager/backend/data /opt/skills-manager/backend/uploads
+ReadWritePaths=/opt/skills-manager/backend/data /opt/skills-manager/backend/uploads /opt/skills-manager/backend/storage
 
 [Install]
 WantedBy=multi-user.target

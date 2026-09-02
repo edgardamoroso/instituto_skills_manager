@@ -1,7 +1,11 @@
 # dependências e uploads
 backend/node_modules/
 backend/uploads/
+backend/storage/
 node_modules/
+
+# cobertura de testes
+backend/coverage/
 
 # banco SQLite (recriado no boot)
 backend/data/*.db
