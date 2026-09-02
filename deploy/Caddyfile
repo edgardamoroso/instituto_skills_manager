@@ -1,7 +1,7 @@
 # Caddy 2 — TLS automático (Let's Encrypt) + proxy reverso para o Node.
-# Uso: coloque este arquivo em /etc/caddy/Caddyfile, ajuste o domínio, e `systemctl reload caddy`.
+# Uso: copie para /etc/caddy/Caddyfile e `systemctl reload caddy`.
 
-cursos.seudominio.com.br {
+skillsmanager.com.br {
     encode zstd gzip
 
     # Repassa para o Node (que escuta em 127.0.0.1:3000).
@@ -14,8 +14,9 @@ cursos.seudominio.com.br {
     request_body {
         max_size 15MB
     }
+}
 
-    log {
-        output file /var/log/caddy/skills-manager.log
-    }
+# Redireciona www -> apex.
+www.skillsmanager.com.br {
+    redir https://skillsmanager.com.br{uri} permanent
 }
