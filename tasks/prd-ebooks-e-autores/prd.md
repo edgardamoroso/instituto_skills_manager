@@ -13,13 +13,18 @@ O Instituto Skills Manager hoje vende **cursos** (síncronos e assíncronos) com
 parcelamento e área do aluno. Esta evolução acrescenta duas capacidades, sem alterar nada
 do que já existe:
 
-1. **Loja de eBooks digitais.** Uma vitrine pública onde o instituto publica eBooks à
-   venda, cada um com uma **amostra gratuita**, preço e um fluxo de compra. O comprador
-   informa seus dados (nome, CPF, data de nascimento, e-mail, telefone) e escolhe a forma
-   de pagamento (PIX ou cartão de crédito/débito). A equipe gera um **link de pagamento**
-   no Asaas e o envia por e-mail; confirmado o pagamento, o comprador recebe o arquivo por
-   um link de download protegido. Não há entrega física nem frete — o produto é 100%
-   digital.
+1. **Loja de eBooks digitais.** Uma vitrine pública onde o instituto publica eBooks. Ao
+   cadastrar um eBook, o admin escolhe a **modalidade**:
+   - **Venda no site:** o eBook tem **amostra gratuita**, preço e um fluxo de compra. O
+     comprador informa seus dados (nome, CPF, data de nascimento, e-mail, telefone) e
+     escolhe a forma de pagamento (PIX ou cartão de crédito/débito). A equipe gera um
+     **link de pagamento** no Asaas e o envia por e-mail; confirmado o pagamento, o
+     comprador recebe o arquivo por um link de download protegido.
+   - **Link externo:** o eBook já está publicado em uma loja externa (ex.: Amazon). O card
+     leva o visitante direto para essa loja ("Comprar na Amazon"); o site não processa
+     pagamento, não coleta dados e não hospeda o arquivo.
+
+   Em ambos os casos não há entrega física nem frete — o produto é 100% digital.
 
 2. **Autoria de cursos.** Cada curso passa a ter um **autor**. O administrador cadastra
    autores, que recebem acesso ao sistema com autoridade para **criar e editar apenas os
@@ -66,8 +71,9 @@ livre da edição de cada curso.
   após pagar, receber o arquivo do eBook por um link de download, para consumir o produto.
 - **US4 — Comprador recorrente:** como comprador que já tem conta no site, quero que meus
   eBooks comprados apareçam em "Minha conta", para baixá-los de novo quando precisar.
-- **US5 — Administrador:** como admin, quero cadastrar um eBook (título, descrição, preço,
-  capa, arquivo e amostra), para colocá-lo à venda.
+- **US5 — Administrador:** como admin, quero cadastrar um eBook escolhendo entre
+  **vender no site** (preço, arquivo e amostra) ou **apontar para uma loja externa** (URL
+  da Amazon, por exemplo), para colocá-lo no catálogo do jeito que fizer mais sentido.
 - **US6 — Administrador:** como admin, quero ver a fila de pedidos, registrar o link de
   pagamento gerado no Asaas e marcar o pedido como pago, para liberar a entrega.
 - **US7 — Administrador:** como admin, quero reenviar o e-mail de pagamento ou de download
@@ -96,26 +102,37 @@ livre da edição de cada curso.
 
 Vitrine listando os eBooks publicados, na mesma identidade visual do site (cards, fonte
 Inter, `styles.css`). Item de menu novo ("eBooks"). Cada eBook tem página de detalhe com
-capa, descrição, preço, botão "Ver amostra" e botão "Comprar".
+capa, descrição e as ações conforme a modalidade.
 
 - **RF1.** O sistema exibe apenas eBooks com status "publicado"; rascunhos ficam ocultos
   do público.
-- **RF2.** A página de detalhe mostra título, descrição, capa, preço em reais e nº de
-  páginas (quando informado).
-- **RF3.** Preços são exibidos em BRL, com centavos, seguindo o padrão já usado nos cursos.
+- **RF2.** A página de detalhe mostra título, descrição, capa e nº de páginas (quando
+  informado).
+- **RF3.** Para eBooks **de venda no site**, a página mostra o preço em BRL (com centavos,
+  padrão dos cursos) e os botões "Ver amostra" e "Comprar".
+- **RF3.1.** Para eBooks **de link externo**, a página mostra um botão de saída rotulado
+  conforme a loja (ex.: "Comprar na Amazon"; rótulo genérico "Comprar" quando a loja não
+  for reconhecida) que abre a URL externa em nova aba. O preço é exibido apenas como
+  referência quando o admin o informar, com a nota de que o valor final é o da loja
+  externa. Não há botão "Comprar" interno nem formulário.
+- **RF3.2.** O catálogo pode misturar as duas modalidades; o card indica visualmente
+  quando o eBook é vendido em loja externa.
 
-### F2 — Amostra gratuita
+### F2 — Amostra gratuita (só venda no site)
 
-Cada eBook tem um arquivo de amostra enviado pelo admin (ex.: PDF com capítulo inicial),
-acessível sem pagamento e sem login.
+eBooks de venda no site têm um arquivo de amostra enviado pelo admin (ex.: PDF com
+capítulo inicial), acessível sem pagamento e sem login.
 
 - **RF4.** O visitante pode abrir/baixar a amostra a partir da página de detalhe.
 - **RF5.** A amostra é servida com as mesmas proteções de download já aplicadas a
   `/uploads` (sem execução no navegador; `Content-Disposition: attachment`).
+- **RF5.1.** Para eBooks de link externo não há amostra hospedada no site (a avaliação
+  fica a cargo da loja externa); o campo de amostra é opcional nesse caso.
 
-### F3 — Fluxo de compra e coleta de dados
+### F3 — Fluxo de compra e coleta de dados (só venda no site)
 
-Formulário de compra acionado pelo botão "Comprar".
+Formulário de compra acionado pelo botão "Comprar". Não se aplica a eBooks de link externo
+(RF3.1) — esses não geram pedido e não passam por F3, F4 nem F5.
 
 - **RF6.** O formulário coleta: nome completo, CPF, data de nascimento, e-mail, telefone e
   forma de pagamento desejada (PIX ou cartão de crédito/débito).
@@ -159,9 +176,17 @@ Formulário de compra acionado pelo botão "Comprar".
 ### F6 — Administração de eBooks (CRUD)
 
 - **RF21.** O admin cria, edita, despublica e remove eBooks.
-- **RF22.** Campos do eBook: título, descrição, preço (centavos), nº de páginas (opcional),
-  imagem de capa, arquivo principal, arquivo de amostra, status (`rascunho`/`publicado`).
-- **RF23.** Não é possível publicar um eBook sem arquivo principal e sem preço definido.
+- **RF22.** Campos comuns: título, descrição, nº de páginas (opcional), imagem de capa,
+  status (`rascunho`/`publicado`) e **modalidade** (`venda_no_site` ou `link_externo`).
+- **RF22.1.** Modalidade `venda_no_site`: preço (centavos), arquivo principal e arquivo de
+  amostra.
+- **RF22.2.** Modalidade `link_externo`: URL da loja externa (obrigatória), nome da loja
+  (opcional; usado no rótulo do botão) e preço de referência (opcional). Sem upload de
+  arquivo.
+- **RF23.** Não é possível publicar um eBook `venda_no_site` sem arquivo principal e sem
+  preço; nem um `link_externo` sem URL externa válida.
+- **RF23.1.** Trocar a modalidade de um eBook que já tem pedidos associados é bloqueado
+  (evita inconsistência com pedidos/entregas existentes).
 - **RF24.** Toda ação de CRUD de eBook e de pedido é registrada na auditoria existente
   (`audit_log`).
 
@@ -211,12 +236,15 @@ Formulário de compra acionado pelo botão "Comprar".
 
 ### Fluxos principais
 
-1. **Comprar eBook:** catálogo → detalhe → "Ver amostra" (opcional) → "Comprar" →
-   formulário (nome, CPF, nascimento, e-mail, telefone, PIX/cartão) → confirmação na tela →
-   e-mail com link de pagamento → comprador paga no Asaas → admin confirma → e-mail com
-   link de download → download.
-2. **Publicar eBook (admin):** painel → eBooks → novo → preenche campos e sobe capa,
-   arquivo e amostra → salva como rascunho → publica.
+1. **Comprar eBook (venda no site):** catálogo → detalhe → "Ver amostra" (opcional) →
+   "Comprar" → formulário (nome, CPF, nascimento, e-mail, telefone, PIX/cartão) →
+   confirmação na tela → e-mail com link de pagamento → comprador paga no Asaas → admin
+   confirma → e-mail com link de download → download.
+1a. **Comprar eBook (link externo):** catálogo → detalhe → "Comprar na Amazon" → abre a
+   loja externa em nova aba; a compra acontece fora do site.
+2. **Publicar eBook (admin):** painel → eBooks → novo → escolhe a modalidade → preenche os
+   campos (venda no site: capa, arquivo, amostra, preço | link externo: capa, URL da loja,
+   nome da loja) → salva como rascunho → publica.
 3. **Tocar pedido (admin):** painel → Pedidos → abre pedido "aguardando link" → cola URL e
    id da cobrança do Asaas → salva (dispara e-mail) → ao ver pago no Asaas, marca "pago"
    (dispara entrega).
@@ -290,13 +318,19 @@ Formulário de compra acionado pelo botão "Comprar".
 - **Autocadastro de autor** (somente o admin cria) e **autor gerenciando** preço,
   publicação comercial, alunos, matrículas ou pagamentos.
 - **eBooks escritos/enviados por autores** — no MVP o cadastro de eBooks é só do admin.
+- **Analytics de cliques no link externo, gestão de links de afiliado, comparação de preço
+  com a loja externa** — o link externo é apenas uma URL cadastrada.
 - **App mobile e internacionalização.**
 
 ---
 
 ## Premissas registradas (a confirmar na TechSpec)
 
-- eBook entregue como **arquivo único** (PDF ou EPUB), até ~50 MB.
+- eBook de **venda no site** entregue como **arquivo único** (PDF ou EPUB), até ~50 MB.
+- eBook de **link externo**: o site guarda só a URL, o nome da loja e um preço de
+  referência opcional; o rótulo do botão é "Comprar na Amazon" quando a URL for da Amazon,
+  senão "Comprar em {loja}" ou apenas "Comprar". O link abre em nova aba com
+  `rel="noopener"`.
 - **Amostra** é um arquivo separado enviado pelo admin — não há geração automática de
   "primeiras N páginas".
 - Confirmação de pagamento no MVP é **manual** (admin marca ao ver no painel do Asaas).
