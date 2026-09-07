@@ -37,6 +37,12 @@ export const config = {
     pass: process.env.SMTP_PASS || '',
     from: process.env.SMTP_FROM || 'Instituto Skills Manager <no-reply@skills.local>',
   },
+  contact: {
+    // Para onde vão as mensagens do formulário "Fale Conosco". Sem CONTACT_EMAIL, usa o e-mail do admin.
+    email: process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL || 'admin@skills.local',
+    // Número do WhatsApp em formato internacional, só dígitos (ex.: 5561999998888). Vazio esconde o botão.
+    whatsapp: (process.env.CONTACT_WHATSAPP || '').replace(/\D/g, ''),
+  },
   uploadsDir: process.env.UPLOADS_DIR || path.join(backendDir, 'uploads'),
   ebook: {
     downloadTtlHours: Number(process.env.EBOOK_DOWNLOAD_TTL_HOURS) || 72,

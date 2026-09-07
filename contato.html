@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fale Conosco | Instituto Skills Manager</title>
+    <meta name="description" content="Fale com o Instituto Skills Manager por e-mail ou WhatsApp." />
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="contact">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Início</a>
+          <a href="cursos-gravados.html" class="nav-link">Cursos assíncronos</a>
+          <a href="cursos-online.html" class="nav-link">Cursos síncronos</a>
+          <a href="ebooks.html" class="nav-link">eBooks</a>
+          <a href="contato.html" class="nav-link active">Fale Conosco</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container page-shell">
+      <section class="course-heading">
+        <p class="eyebrow">Contato</p>
+        <h1>Fale Conosco</h1>
+        <p class="course-description">
+          Envie sua mensagem pelo formulário abaixo e responderemos por e-mail, ou
+          fale com a gente agora mesmo pelo WhatsApp.
+        </p>
+      </section>
+
+      <div class="contact-grid">
+        <form id="contact-form" class="panel enrollment-form">
+          <label for="contact-name">Nome</label>
+          <input id="contact-name" name="name" maxlength="120" autocomplete="name" required />
+
+          <label for="contact-email">E-mail</label>
+          <input id="contact-email" name="email" type="email" maxlength="160" autocomplete="email" required />
+
+          <label for="contact-phone">Telefone (opcional)</label>
+          <input id="contact-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" />
+
+          <label for="contact-subject">Assunto (opcional)</label>
+          <input id="contact-subject" name="subject" maxlength="160" />
+
+          <label for="contact-message">Mensagem</label>
+          <textarea id="contact-message" name="message" rows="6" maxlength="5000" required></textarea>
+
+          <button class="btn btn-primary btn-full" type="submit">Enviar mensagem</button>
+          <p id="contact-feedback" class="form-feedback" role="status"></p>
+        </form>
+
+        <aside id="contact-whatsapp" class="panel contact-whatsapp" hidden>
+          <h2>WhatsApp</h2>
+          <p>Prefere conversar por mensagem? O botão abre o WhatsApp já com o texto do formulário.</p>
+          <a id="contact-whatsapp-link" class="btn btn-whatsapp btn-full" href="#" target="_blank" rel="noopener">
+            Falar no WhatsApp
+          </a>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados.</p></div></footer>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

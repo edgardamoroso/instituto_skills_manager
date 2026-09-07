@@ -570,6 +570,31 @@ legend {
   border: 1px dashed var(--border);
 }
 
+/* ---- Fale Conosco ---- */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.contact-whatsapp h2 {
+  margin-top: 0;
+}
+
+.contact-whatsapp p {
+  color: var(--muted);
+}
+
+.btn-whatsapp {
+  background: #25d366;
+  color: #06341c;
+}
+
+.btn-whatsapp:hover {
+  background: #1eb958;
+}
+
 .footer {
   padding: 2rem 0 3rem;
   color: var(--muted);
@@ -585,7 +610,8 @@ legend {
   .hero-grid,
   .feature-grid,
   .cards-grid,
-  .admin-layout {
+  .admin-layout,
+  .contact-grid {
     grid-template-columns: 1fr;
   }
 }

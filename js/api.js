@@ -108,4 +108,8 @@ export const api = {
 
   // visão geral
   overview: () => request('/overview'),
+
+  // fale conosco
+  contactConfig: () => request('/contact/config'),
+  sendContact: (body) => request('/contact', { method: 'POST', body }),
 };

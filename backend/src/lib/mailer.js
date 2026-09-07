@@ -26,10 +26,10 @@ async function getTransport() {
 }
 
 // Envia e-mail. Sem SMTP configurado, registra no log e na outbox (dev/homologação/testes).
-export async function sendMail({ to, subject, text, html }) {
+export async function sendMail({ to, subject, text, html, replyTo }) {
   const transport = await getTransport();
   if (!transport) {
-    sentMessages.push({ to, subject, text: text || html || '' });
+    sentMessages.push({ to, subject, text: text || html || '', ...(replyTo ? { replyTo } : {}) });
     console.log('----------------------------------------------------------');
     console.log(`[e-mail simulado] para: ${to}`);
     console.log(`assunto: ${subject}`);
@@ -38,7 +38,7 @@ export async function sendMail({ to, subject, text, html }) {
     return;
   }
   try {
-    await transport.sendMail({ from: config.smtp.from, to, subject, text, html });
+    await transport.sendMail({ from: config.smtp.from, to, subject, text, html, replyTo });
   } catch (error) {
     console.error('Falha ao enviar e-mail:', error.message);
   }

@@ -77,8 +77,15 @@ cp backend/.env.example backend/.env
 #   PUBLIC_URL=https://cursos.seudominio.com.br   (precisa ser https)
 #   TRUST_PROXY=1
 #   ADMIN_EMAIL / ADMIN_PASSWORD  (senha forte — o boot recusa "admin123")
-#   SMTP_*  (para os e-mails de confirmação de cadastro)
+#   SMTP_*  (para os e-mails de confirmação de cadastro e do Fale Conosco)
+#   CONTACT_EMAIL / CONTACT_WHATSAPP  (destino das mensagens do Fale Conosco)
 ```
+
+O **Fale Conosco** (`/contato.html`) envia a mensagem do formulário por e-mail para
+`CONTACT_EMAIL` (ou `ADMIN_EMAIL` se vazio), com `reply-to` do remetente. Sem SMTP, a
+mensagem só vai para o log. Se `CONTACT_WHATSAPP` (formato internacional, só dígitos —
+ex.: `5561999998888`) estiver definido, a página também mostra um botão que abre o
+WhatsApp com o texto já preenchido; em branco, o botão fica escondido.
 
 Com `NODE_ENV=production`, o servidor **recusa iniciar** se a senha admin for o padrão,
 se `PUBLIC_URL` não for https ou se `TRUST_PROXY` não estiver definido.

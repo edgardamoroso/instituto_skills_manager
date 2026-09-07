@@ -12,6 +12,7 @@ import { initSetPasswordPage } from './set-password.js';
 import { initEbookCatalog, initEbookPage } from './ebooks-catalog.js';
 import { initAdminEbooks, initEbookEditor } from './admin-ebooks.js';
 import { initAdminOrders } from './admin-orders.js';
+import { initContactPage } from './contact.js';
 
 const routes = {
   home: initCatalog,
@@ -35,6 +36,7 @@ const routes = {
   'verify-email': initVerifyEmailPage,
   'set-password': initSetPasswordPage,
   account: initAccountPage,
+  contact: initContactPage,
 };
 
 async function boot() {
