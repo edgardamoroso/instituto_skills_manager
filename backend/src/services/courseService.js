@@ -3,6 +3,7 @@ import { db } from '../db/index.js';
 import { toCents } from '../lib/money.js';
 import { badRequest, notFound, unauthorized, forbidden } from '../lib/errors.js';
 import { str, optionalStr, oneOf } from '../lib/validate.js';
+import { sanitizeDescriptionHtml } from '../lib/richText.js';
 
 const listCoursesStmt = db.prepare('SELECT * FROM courses ORDER BY created_at DESC, title ASC');
 const listCoursesByAuthorStmt = db.prepare('SELECT * FROM courses WHERE author_id = ? ORDER BY created_at DESC, title ASC');
@@ -70,7 +71,10 @@ function normalizeCourseInput(input = {}) {
   return {
     title: str(input.title, { code: 'COURSE_FIELDS_REQUIRED', min: 1, max: 160 }),
     type: oneOf(input.type === 'online' ? 'online' : 'gravado', ['gravado', 'online']),
-    description: str(input.description, { code: 'COURSE_FIELDS_REQUIRED', min: 1, max: 2000 }),
+    // Sanitiza antes de validar o tamanho: o editor rico manda HTML, e o
+    // limite deve valer sobre o que de fato fica salvo, não sobre marcação
+    // que pode ser descartada na sanitização.
+    description: str(sanitizeDescriptionHtml(input.description), { code: 'COURSE_FIELDS_REQUIRED', min: 1, max: 4000 }),
     duration: str(input.duration, { code: 'COURSE_FIELDS_REQUIRED', min: 1, max: 80 }),
     price_cents: priceCents,
   };

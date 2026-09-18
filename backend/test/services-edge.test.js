@@ -39,6 +39,18 @@ test('courseService: admin authorId vazio limpa autor; curso inexistente', () =>
   assert.throws(() => deleteCourse('nada', admin), /COURSE_NOT_FOUND/);
 });
 
+test('courseService: descrição sanitiza HTML perigoso e mantém formatação permitida', () => {
+  const admin = { id: 'admin-id', role: 'admin' };
+  const dirty = '<p onclick="evil()">Olá <strong>mundo</strong></p><script>alert(1)</script><img src=x onerror=alert(1)>';
+  const course = createCourse({ title: 'T', type: 'gravado', description: dirty, duration: '1h', priceCents: '100' }, admin);
+  assert.equal(course.description, '<p>Olá <strong>mundo</strong></p>');
+
+  assert.throws(
+    () => createCourse({ title: 'T', type: 'gravado', description: '<script>alert(1)</script>', duration: '1h', priceCents: '100' }, admin),
+    /COURSE_FIELDS_REQUIRED/,
+  );
+});
+
 test('courseService: getCourseContent — sem usuário 401, matrícula inativa com motivo', () => {
   const admin = { id: 'a', role: 'admin' };
   const course = createCourse({ title: 'Prot', type: 'gravado', description: 'd', duration: '1h', priceCents: '100' }, admin);

@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { formatBRL, courseTypeLabel, escapeHtml } from './format.js';
+import { formatBRL, courseTypeLabel, escapeHtml, descriptionExcerpt } from './format.js';
 
 function courseCard(course) {
   return `
@@ -8,7 +8,7 @@ function courseCard(course) {
         <h3>${escapeHtml(course.title)}</h3>
         <span class="type-pill">${courseTypeLabel(course.type)}</span>
       </div>
-      <p>${escapeHtml(course.description)}</p>
+      <p>${escapeHtml(descriptionExcerpt(course.description))}</p>
       <div class="meta">
         <span>⏱ ${escapeHtml(course.duration)}</span>
         <span>💸 ${formatBRL(course.priceCents)}</span>

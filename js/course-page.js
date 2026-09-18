@@ -1,6 +1,6 @@
 import { api, ApiError } from './api.js';
 import { currentUser } from './session.js';
-import { formatBRL, courseTypeLabel, escapeHtml, safeUrl } from './format.js';
+import { formatBRL, courseTypeLabel, escapeHtml, safeUrl, renderDescriptionHtml } from './format.js';
 
 function resourceLabel(type) {
   return { video: 'vídeo', pdf: 'pdf', link: 'link externo', file: 'arquivo' }[type] || 'recurso';
@@ -100,7 +100,7 @@ export async function initCoursePage() {
       <a class="back-link" href="${backHref}">← Voltar ao catálogo</a>
       <span class="type-pill">${course.type === 'gravado' ? 'Curso assíncrono' : 'Curso síncrono'}</span>
       <h1>${escapeHtml(course.title)}</h1>
-      <p class="course-description">${escapeHtml(course.description)}</p>
+      <div class="course-description-rich">${renderDescriptionHtml(course.description)}</div>
       ${course.author ? `<p class="course-author">Autor: <strong>${escapeHtml(course.author.name)}</strong>${course.author.bio ? ` — ${escapeHtml(course.author.bio)}` : ''}</p>` : ''}
       <div class="meta">
         <span>⏱ ${escapeHtml(course.duration)}</span>

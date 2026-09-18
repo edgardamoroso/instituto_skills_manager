@@ -78,3 +78,28 @@ export function escapeHtml(value) {
     "'": '&#39;',
   }[char]));
 }
+
+const HAS_HTML_TAG = /<[a-z][\s\S]*>/i;
+
+// Descrição de curso: o backend já devolve HTML sanitizado (editor rico) ou
+// texto simples legado (cursos cadastrados antes do editor rico existir).
+// Nunca vem de outra fonte, então HTML já sanitizado é injetado direto;
+// texto legado vira parágrafos aqui, escapado, pra não quebrar o layout.
+export function renderDescriptionHtml(value) {
+  const text = String(value ?? '');
+  if (!text) return '';
+  if (HAS_HTML_TAG.test(text)) return text;
+  return text
+    .split(/\n{2,}/)
+    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
+// Resumo em texto puro pra cards e listas (a formatação completa só
+// aparece na página do curso). Funciona tanto com o HTML novo quanto com
+// descrição simples legada.
+export function descriptionExcerpt(value, maxLength = 160) {
+  const text = String(value ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trimEnd()}…`;
+}

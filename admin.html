@@ -10,6 +10,7 @@
     />
     <link rel="stylesheet" href="assets/fonts.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="assets/vendor/quill/quill.snow.css" />
   </head>
   <body data-page="admin">
     <header class="site-header">
@@ -58,8 +59,8 @@
             <option value="online">Síncrono</option>
           </select>
 
-          <label for="description">Descrição</label>
-          <textarea id="description" name="description" rows="3" required></textarea>
+          <label for="description-editor">Descrição</label>
+          <div class="rich-editor"><div id="description-editor"></div></div>
 
           <label for="duration">Duração</label>
           <input id="duration" name="duration" type="text" required />
@@ -133,6 +134,7 @@
       </div>
     </footer>
 
+    <script src="assets/vendor/quill/quill.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

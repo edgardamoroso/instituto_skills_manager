@@ -335,6 +335,29 @@ textarea {
   background: #f8fafc;
 }
 
+.rich-editor {
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.rich-editor .ql-toolbar.ql-snow {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-family: inherit;
+}
+
+.rich-editor .ql-container.ql-snow {
+  border: none;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.rich-editor .ql-editor {
+  min-height: 160px;
+}
+
 fieldset {
   margin: 0.5rem 0;
   padding: 0.9rem;
@@ -453,6 +476,40 @@ legend {
 .panel-note,
 .course-description {
   color: var(--muted);
+}
+
+.course-description-rich {
+  color: var(--text);
+  line-height: 1.7;
+  max-width: 70ch;
+}
+
+.course-description-rich p {
+  margin: 0 0 1rem;
+}
+
+.course-description-rich p:last-child {
+  margin-bottom: 0;
+}
+
+.course-description-rich ul,
+.course-description-rich ol {
+  margin: 0 0 1rem 1.3rem;
+  padding: 0;
+}
+
+/* Alinhamento do editor rico é sempre por classe (ql-align-*), nunca por
+   style="" inline — o CSP do site bloqueia atributos style. */
+.course-description-rich .ql-align-center {
+  text-align: center;
+}
+
+.course-description-rich .ql-align-right {
+  text-align: right;
+}
+
+.course-description-rich .ql-align-justify {
+  text-align: justify;
 }
 
 .course-author {

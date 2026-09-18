@@ -1,8 +1,53 @@
 import { api, ApiError } from './api.js';
 import { guardCourseEditor } from './session.js';
-import { formatBRL, courseTypeLabel, escapeHtml } from './format.js';
+import { formatBRL, courseTypeLabel, escapeHtml, descriptionExcerpt } from './format.js';
 
 const resourceLabels = { video: 'Vídeo', pdf: 'PDF', link: 'Link externo', file: 'Arquivo' };
+const HAS_HTML_TAG = /<[a-z][\s\S]*>/i;
+
+// Alinhamento como CLASSE (ql-align-*), não estilo inline — o CSP do site
+// bloqueia atributos style="" (style-src sem unsafe-inline), então
+// text-align inline nunca seria aplicado. Classe não tem essa restrição.
+let alignRegistered = false;
+function makeDescriptionEditor(container) {
+  if (!container || !window.Quill) return null;
+  if (!alignRegistered) {
+    window.Quill.register(window.Quill.import('attributors/class/align'), true);
+    alignRegistered = true;
+  }
+  return new window.Quill(container, {
+    theme: 'snow',
+    placeholder: 'Descreva o curso: objetivos, para quem é indicado, o que o aluno vai aprender…',
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        [{ align: [] }],
+        ['clean'],
+      ],
+    },
+  });
+}
+
+function setDescriptionEditor(quill, raw) {
+  if (!quill) return;
+  quill.setText('');
+  const text = raw || '';
+  if (!text) return;
+  if (HAS_HTML_TAG.test(text)) {
+    quill.clipboard.dangerouslyPasteHTML(text);
+  } else {
+    quill.setText(text);
+  }
+}
+
+function getDescriptionFromEditor(quill) {
+  if (!quill) return '';
+  // getSemanticHTML() (e não .root.innerHTML) — o innerHTML do editor
+  // inclui marcação interna do Quill (data-list, spans de UI da lista)
+  // que não é HTML semântico e seria descartada pelo sanitizador.
+  return quill.getText().trim() ? quill.getSemanticHTML() : '';
+}
 
 /* ------------------------------------------------------------------ */
 /* admin.html — CRUD de curso + gestor de aulas embutido               */
@@ -23,6 +68,7 @@ export async function initAdminCourses() {
   const cancelButton = document.getElementById('cancel-edit');
   const list = document.getElementById('admin-course-list');
   const count = document.getElementById('course-count');
+  const descriptionEditor = makeDescriptionEditor(document.getElementById('description-editor'));
   let authorSelect = document.getElementById('course-author');
 
   if (authorSelect && isAuthor) {
@@ -57,6 +103,7 @@ export async function initAdminCourses() {
     courseIdInput.value = '';
     editingId = null;
     formTitle.textContent = 'Adicionar curso';
+    setDescriptionEditor(descriptionEditor, '');
   }
 
   function render() {
@@ -66,7 +113,7 @@ export async function initAdminCourses() {
         <div class="admin-item">
           <div>
             <strong>${escapeHtml(course.title)}</strong>
-            <p>${escapeHtml(course.description)}</p>
+            <p>${escapeHtml(descriptionExcerpt(course.description))}</p>
             <span class="badge">${courseTypeLabel(course.type)}</span>
             <span class="badge">${formatBRL(course.priceCents)}</span>
             ${course.author ? `<span class="badge">Autor: ${escapeHtml(course.author.name)}</span>` : ''}
@@ -123,7 +170,7 @@ export async function initAdminCourses() {
     const payload = {
       title: data.get('title'),
       type: data.get('type'),
-      description: data.get('description'),
+      description: getDescriptionFromEditor(descriptionEditor),
       duration: data.get('duration'),
       price: data.get('price'),
     };
@@ -158,7 +205,7 @@ export async function initAdminCourses() {
       courseIdInput.value = id;
       document.getElementById('title').value = full.title;
       document.getElementById('type').value = full.type;
-      document.getElementById('description').value = full.description;
+      setDescriptionEditor(descriptionEditor, full.description);
       document.getElementById('duration').value = full.duration;
       document.getElementById('price').value = formatBRL(full.priceCents);
       if (authorSelect) authorSelect.value = full.author?.id || '';
