@@ -35,6 +35,10 @@ before(() => {
   old.prepare("INSERT INTO users (id, name, email, password_hash, role, email_verified) VALUES (?, 'Admin', 'a@b.com', 'hash', 'admin', 1)").run('u1');
   old.prepare("INSERT INTO users (id, name, email, password_hash, role) VALUES (?, 'Aluno', 'c@d.com', 'hash', 'student')").run('u2');
   old.prepare("INSERT INTO courses (id, title, type) VALUES ('c1', 'Curso', 'gravado')").run();
+  const addCourse = old.prepare("INSERT INTO courses (id, title, type, description) VALUES (?, 'Legado', 'gravado', ?)");
+  addCourse.run('c-xss', '<p onclick="alert(1)">Oi</p><img src=x onerror="alert(2)"><script>alert(3)</script>');
+  addCourse.run('c-rich', '<p class="ql-align-center"><strong>Curso</strong> completo</p>');
+  addCourse.run('c-text', 'Texto puro com a < b & c > d\nsegunda linha');
   old.prepare("INSERT INTO sessions (token, user_id, expires_at) VALUES ('t1', 'u1', datetime('now','+1 day'))").run();
   old.close();
 
@@ -92,6 +96,18 @@ test('courses.author_id foi adicionado como FK opcional', async () => {
   );
 });
 
+test('descrições legadas com HTML são sanitizadas; texto puro fica intacto', async () => {
+  const { db } = await import('../../src/db/index.js');
+  const description = (id) => db.prepare('SELECT description FROM courses WHERE id = ?').get(id).description;
+
+  // Given descrições gravadas antes do editor rico
+  // Then o HTML perigoso some e o conteúdo permitido fica
+  assert.equal(description('c-xss'), '<p>Oi</p>');
+  assert.equal(description('c-rich'), '<p class="ql-align-center"><strong>Curso</strong> completo</p>');
+  // e o texto puro não é tocado (o frontend o escapa na renderização)
+  assert.equal(description('c-text'), 'Texto puro com a < b & c > d\nsegunda linha');
+});
+
 test('nenhuma violação de FK após a migração', async () => {
   const { db } = await import('../../src/db/index.js');
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
@@ -100,12 +116,15 @@ test('nenhuma violação de FK após a migração', async () => {
 test('reexecutar o boot é idempotente (schema estável)', async () => {
   const first = await import('../../src/db/index.js');
   const before = first.db.prepare("SELECT sql FROM sqlite_master WHERE name = 'users'").get().sql;
+  const descriptionsBefore = first.db.prepare('SELECT id, description FROM courses ORDER BY id').all();
 
   // When um novo módulo db roda de novo sobre o mesmo arquivo já migrado
   const second = await import('../../src/db/index.js?again=1');
   const after = second.db.prepare("SELECT sql FROM sqlite_master WHERE name = 'users'").get().sql;
+  const descriptionsAfter = second.db.prepare('SELECT id, description FROM courses ORDER BY id').all();
 
   // Then não muda nada e não lança
   assert.equal(after, before);
+  assert.deepEqual(descriptionsAfter, descriptionsBefore);
   second.closeDatabase();
 });

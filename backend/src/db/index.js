@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import '../lib/config.js'; // carrega backend/.env antes de qualquer coisa
 import { seedDatabase } from './seed.js';
+import { sanitizeDescriptionHtml } from '../lib/richText.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dataDirectory = path.resolve(here, '../../data');
@@ -72,6 +73,20 @@ if (!columnExists('courses', 'author_id')) {
   db.exec('ALTER TABLE courses ADD COLUMN author_id TEXT REFERENCES users(id) ON DELETE SET NULL');
 }
 db.exec('CREATE INDEX IF NOT EXISTS idx_courses_author ON courses(author_id)');
+
+// 4) Descrições de curso gravadas antes do editor rico não passaram pela sanitização
+//    e a página do curso renderiza como HTML qualquer descrição que contenha tag.
+//    Sanitiza essas linhas; texto puro fica intacto (o frontend já o escapa).
+//    Idempotente: HTML já sanitizado não muda e não gera UPDATE.
+{
+  const HAS_HTML_TAG = /<[a-z][\s\S]*>/i;
+  const updateDescription = db.prepare('UPDATE courses SET description = ? WHERE id = ?');
+  for (const { id, description } of db.prepare('SELECT id, description FROM courses').all()) {
+    if (!HAS_HTML_TAG.test(description)) continue;
+    const clean = sanitizeDescriptionHtml(description);
+    if (clean !== description) updateDescription.run(clean, id);
+  }
+}
 
 const courseCount = db.prepare('SELECT count(*) AS total FROM courses').get().total;
 const userCount = db.prepare('SELECT count(*) AS total FROM users').get().total;
