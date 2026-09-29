@@ -13,6 +13,7 @@ import { initEbookCatalog, initEbookPage } from './ebooks-catalog.js';
 import { initAdminEbooks, initEbookEditor } from './admin-ebooks.js';
 import { initAdminOrders } from './admin-orders.js';
 import { initContactPage } from './contact.js';
+import { initVideoFeed, initAdminVideos } from './videos.js';
 
 const routes = {
   home: initCatalog,
@@ -37,6 +38,8 @@ const routes = {
   'set-password': initSetPasswordPage,
   account: initAccountPage,
   contact: initContactPage,
+  news: initVideoFeed,
+  'admin-videos': initAdminVideos,
 };
 
 async function boot() {

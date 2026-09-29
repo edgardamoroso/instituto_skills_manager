@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vídeos (admin) | Instituto Skills Manager</title>
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="admin-videos">
+    <header class="site-header">
+      <nav class="container nav">
+        <a class="brand" href="index.html"><img src="assets/logo.svg" alt="Instituto Skills Manager" /></a>
+        <div class="nav-links">
+          <a href="admin.html" class="nav-link">Cursos</a>
+          <a href="autores.html" class="nav-link">Autores</a>
+          <a href="admin-ebooks.html" class="nav-link">eBooks</a>
+          <a href="pedidos.html" class="nav-link">Pedidos</a>
+          <a href="admin-videos.html" class="nav-link active">Vídeos</a>
+          <a href="alunos.html" class="nav-link">Alunos</a>
+          <a href="matriculas.html" class="nav-link">Matrículas</a>
+        </div>
+      </nav>
+    </header>
+    <main class="container page-shell">
+      <section class="course-heading">
+        <p class="eyebrow">Área administrativa</p>
+        <h1>Vídeos</h1>
+        <p class="course-description">
+          Vídeos publicados aparecem na página <a href="novidades.html">Novidades</a>, do mais
+          recente para o mais antigo.
+        </p>
+      </section>
+      <section class="admin-layout">
+        <form id="video-form" class="panel">
+          <h2 id="video-form-title">Novo vídeo</h2>
+          <label for="video-title">Título</label>
+          <input id="video-title" name="title" maxlength="160" required />
+          <label for="video-description">Descrição (opcional)</label>
+          <textarea id="video-description" name="description" rows="3" maxlength="2000"></textarea>
+          <label for="video-link">Link do vídeo</label>
+          <input id="video-link" name="link" type="url" placeholder="https://drive.google.com/file/d/…/view" required />
+          <p class="field-hint">
+            No Google Drive: clique com o botão direito no vídeo → <strong>Compartilhar</strong> →
+            em "Acesso geral" escolha <strong>Qualquer pessoa com o link</strong> (Leitor) →
+            <strong>Copiar link</strong>. Links do YouTube também funcionam.
+          </p>
+          <label for="video-course">Curso relacionado (opcional)</label>
+          <select id="video-course" name="courseId"><option value="">Nenhum</option></select>
+          <label for="video-status">Situação</label>
+          <select id="video-status" name="status">
+            <option value="publicado">Publicado</option>
+            <option value="rascunho">Rascunho (não aparece no site)</option>
+          </select>
+          <button class="btn btn-primary btn-full" type="submit">Salvar vídeo</button>
+          <button class="btn btn-secondary btn-full" type="button" id="cancel-video-edit">Cancelar</button>
+          <p id="video-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+        </form>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Vídeos cadastrados</h2>
+            <span id="video-count" class="badge"></span>
+          </div>
+          <div id="video-list-admin" class="admin-list"></div>
+        </section>
+      </section>
+    </main>
+    <footer class="footer"><div class="container footer-content"><p>© 2026 Instituto Skills Manager. Todos os direitos reservados. · <a href="privacidade.html">Política de Privacidade</a></p></div></footer>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

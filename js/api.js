@@ -109,6 +109,13 @@ export const api = {
   // visão geral
   overview: () => request('/overview'),
 
+  // vídeos (Novidades)
+  videos: () => request('/videos'),
+  videosManage: () => request('/videos/manage'),
+  createVideo: (body) => request('/videos', { method: 'POST', body }),
+  updateVideo: (id, body) => request(`/videos/${id}`, { method: 'PATCH', body }),
+  deleteVideo: (id) => request(`/videos/${id}`, { method: 'DELETE' }),
+
   // fale conosco
   contactConfig: () => request('/contact/config'),
   sendContact: (body) => request('/contact', { method: 'POST', body }),

@@ -144,3 +144,18 @@ CREATE INDEX IF NOT EXISTS idx_ebooks_status ON ebooks(status);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON ebook_orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_email ON ebook_orders(buyer_email);
 CREATE INDEX IF NOT EXISTS idx_grants_order ON ebook_download_grants(order_id);
+
+-- Vídeos da página "Novidades": o arquivo fica no Google Drive (ou YouTube);
+-- o site guarda só a referência e monta o player incorporado.
+CREATE TABLE IF NOT EXISTS videos (
+  id          TEXT PRIMARY KEY,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  provider    TEXT NOT NULL CHECK (provider IN ('drive', 'youtube')),
+  video_ref   TEXT NOT NULL,
+  course_id   TEXT REFERENCES courses(id) ON DELETE SET NULL,
+  status      TEXT NOT NULL DEFAULT 'rascunho' CHECK (status IN ('rascunho', 'publicado')),
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_videos_status ON videos(status);
