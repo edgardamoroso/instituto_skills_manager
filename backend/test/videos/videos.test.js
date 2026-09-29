@@ -69,7 +69,6 @@ test('admin cadastra vídeo do Drive: nasce rascunho e devolve URL do player', a
   assert.equal(response.body.status, 'rascunho');
   assert.equal(response.body.provider, 'drive');
   assert.equal(response.body.embedUrl, `https://drive.google.com/file/d/${DRIVE_ID}/preview`);
-  assert.equal(response.body.course, null);
 });
 
 test('só vídeos publicados aparecem na página pública', async () => {
@@ -90,35 +89,40 @@ test('só vídeos publicados aparecem na página pública', async () => {
   assert.equal(response.body.find((v) => v.id === published.body.id).embedUrl, 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
 });
 
-test('publicar, vincular a curso e editar parcialmente', async () => {
-  // Given um vídeo e um curso existente
-  const created = await admin.post('/api/videos', { body: { title: 'Original', link: DRIVE_LINK } });
-  const courses = await anon.get('/api/courses');
-  const course = courses.body[0];
+test('publicar e editar parcialmente preserva os demais campos', async () => {
+  // Given um vídeo em rascunho
+  const created = await admin.post('/api/videos', { body: { title: 'Original', description: 'desc', link: DRIVE_LINK } });
 
-  // When o admin publica e vincula ao curso, sem reenviar o link
-  const response = await admin.patch(`/api/videos/${created.body.id}`, {
-    body: { status: 'publicado', courseId: course.id },
-  });
+  // When o admin só publica, sem reenviar título nem link
+  const response = await admin.patch(`/api/videos/${created.body.id}`, { body: { status: 'publicado' } });
 
   // Then o restante é preservado
   assert.equal(response.status, 200);
   assert.equal(response.body.status, 'publicado');
   assert.equal(response.body.title, 'Original');
+  assert.equal(response.body.description, 'desc');
   assert.equal(response.body.provider, 'drive');
-  assert.deepEqual(response.body.course, { id: course.id, title: course.title });
 });
 
-test('validações: título, link, curso e status', async () => {
+test('trocar o link muda o provedor e o player', async () => {
+  // Given um vídeo do Drive
+  const created = await admin.post('/api/videos', { body: { title: 'Troca', link: DRIVE_LINK } });
+
+  // When o admin troca por um link do YouTube
+  const response = await admin.patch(`/api/videos/${created.body.id}`, { body: { link: 'https://youtu.be/dQw4w9WgXcQ' } });
+
+  // Then o player passa a ser o do YouTube
+  assert.equal(response.body.provider, 'youtube');
+  assert.equal(response.body.embedUrl, 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+});
+
+test('validações: título, link e status', async () => {
   const noTitle = await admin.post('/api/videos', { body: { title: '', link: DRIVE_LINK } });
   assert.equal(noTitle.status, 400);
   assert.equal(noTitle.body.error, 'VIDEO_FIELDS_REQUIRED');
 
   const badLink = await admin.post('/api/videos', { body: { title: 'X', link: 'https://exemplo.com/video.mp4' } });
   assert.equal(badLink.body.error, 'VIDEO_LINK_UNSUPPORTED');
-
-  const badCourse = await admin.post('/api/videos', { body: { title: 'X', link: DRIVE_LINK, courseId: 'nao-existe' } });
-  assert.equal(badCourse.body.error, 'VIDEO_COURSE_INVALID');
 
   const badStatus = await admin.post('/api/videos', { body: { title: 'X', link: DRIVE_LINK, status: 'ao-vivo' } });
   assert.equal(badStatus.body.error, 'VIDEO_STATUS_INVALID');

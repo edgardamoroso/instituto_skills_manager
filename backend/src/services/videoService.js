@@ -7,18 +7,16 @@ import { str, optionalStr, oneOf } from '../lib/validate.js';
 // YouTube); aqui guardamos só o provedor + o id do arquivo e montamos a URL do
 // player incorporado. Nunca guardamos nem devolvemos a URL colada como veio.
 
-const SELECT = `SELECT v.*, c.title AS course_title FROM videos v LEFT JOIN courses c ON c.id = v.course_id`;
-const listPublishedStmt = db.prepare(`${SELECT} WHERE v.status = 'publicado' ORDER BY v.created_at DESC, v.rowid DESC`);
-const listAllStmt = db.prepare(`${SELECT} ORDER BY v.created_at DESC, v.rowid DESC`);
-const getStmt = db.prepare(`${SELECT} WHERE v.id = ?`);
-const courseExistsStmt = db.prepare('SELECT 1 FROM courses WHERE id = ?');
+const listPublishedStmt = db.prepare("SELECT * FROM videos WHERE status = 'publicado' ORDER BY created_at DESC, rowid DESC");
+const listAllStmt = db.prepare('SELECT * FROM videos ORDER BY created_at DESC, rowid DESC');
+const getStmt = db.prepare('SELECT * FROM videos WHERE id = ?');
 const insertStmt = db.prepare(
-  `INSERT INTO videos (id, title, description, provider, video_ref, course_id, status)
-   VALUES (@id, @title, @description, @provider, @video_ref, @course_id, @status)`,
+  `INSERT INTO videos (id, title, description, provider, video_ref, status)
+   VALUES (@id, @title, @description, @provider, @video_ref, @status)`,
 );
 const updateStmt = db.prepare(
   `UPDATE videos SET title = @title, description = @description, provider = @provider,
-   video_ref = @video_ref, course_id = @course_id, status = @status WHERE id = @id`,
+   video_ref = @video_ref, status = @status WHERE id = @id`,
 );
 const deleteStmt = db.prepare('DELETE FROM videos WHERE id = ?');
 
@@ -82,17 +80,9 @@ function toApi(row) {
     provider: row.provider,
     embedUrl: embedUrl(row.provider, row.video_ref),
     watchUrl: watchUrl(row.provider, row.video_ref),
-    course: row.course_id ? { id: row.course_id, title: row.course_title } : null,
     status: row.status,
     createdAt: row.created_at,
   };
-}
-
-function normalizeCourseId(value) {
-  const id = String(value ?? '').trim();
-  if (!id) return null;
-  if (!courseExistsStmt.get(id)) throw badRequest('VIDEO_COURSE_INVALID');
-  return id;
 }
 
 function normalize(input = {}, current = null) {
@@ -105,11 +95,10 @@ function normalize(input = {}, current = null) {
   const link = input.link === undefined && current
     ? { provider: current.provider, ref: current.video_ref }
     : parseVideoLink(input.link);
-  const course_id = input.courseId === undefined && current ? current.course_id : normalizeCourseId(input.courseId);
   const status = input.status === undefined
     ? (current ? current.status : 'rascunho')
     : oneOf(input.status, ['rascunho', 'publicado'], { code: 'VIDEO_STATUS_INVALID' });
-  return { title, description, provider: link.provider, video_ref: link.ref, course_id, status };
+  return { title, description, provider: link.provider, video_ref: link.ref, status };
 }
 
 export function listPublishedVideos() {

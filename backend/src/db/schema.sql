@@ -153,7 +153,6 @@ CREATE TABLE IF NOT EXISTS videos (
   description TEXT NOT NULL DEFAULT '',
   provider    TEXT NOT NULL CHECK (provider IN ('drive', 'youtube')),
   video_ref   TEXT NOT NULL,
-  course_id   TEXT REFERENCES courses(id) ON DELETE SET NULL,
   status      TEXT NOT NULL DEFAULT 'rascunho' CHECK (status IN ('rascunho', 'publicado')),
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );

@@ -22,9 +22,6 @@ function videoCard(video) {
         <p class="video-date">${escapeHtml(formatDate(video.createdAt))}</p>
         <h3>${escapeHtml(video.title)}</h3>
         ${video.description ? `<p>${escapeHtml(video.description)}</p>` : ''}
-        ${video.course
-          ? `<a class="card-link" href="curso.html?id=${encodeURIComponent(video.course.id)}">Conhecer o curso ${escapeHtml(video.course.title)} →</a>`
-          : ''}
       </div>
     </article>`;
 }
@@ -46,7 +43,6 @@ const ERROR_MESSAGES = {
   VIDEO_FIELDS_REQUIRED: 'Informe o título do vídeo.',
   VIDEO_LINK_INVALID: 'Link não reconhecido. Use o link de compartilhamento do arquivo no Google Drive (ou do vídeo no YouTube).',
   VIDEO_LINK_UNSUPPORTED: 'Só aceitamos links do Google Drive ou do YouTube.',
-  VIDEO_COURSE_INVALID: 'O curso escolhido não existe mais. Recarregue a página.',
 };
 
 export async function initAdminVideos() {
@@ -58,7 +54,6 @@ export async function initAdminVideos() {
   const list = document.getElementById('video-list-admin');
   const count = document.getElementById('video-count');
   const feedback = document.getElementById('video-feedback');
-  const courseSelect = document.getElementById('video-course');
 
   let videos = [];
   let editingId = null;
@@ -84,7 +79,6 @@ export async function initAdminVideos() {
             ${video.description ? `<p>${escapeHtml(video.description)}</p>` : ''}
             <span class="badge">${video.status === 'publicado' ? 'Publicado' : 'Rascunho'}</span>
             <span class="badge">${PROVIDER_LABEL[video.provider] || video.provider}</span>
-            ${video.course ? `<span class="badge">${escapeHtml(video.course.title)}</span>` : ''}
             <p><a href="${escapeHtml(safeUrl(video.watchUrl))}" target="_blank" rel="noopener">Abrir vídeo ↗</a></p>
           </div>
           <div class="actions">
@@ -101,12 +95,6 @@ export async function initAdminVideos() {
     render();
   }
 
-  async function loadCourses() {
-    const courses = await api.courses();
-    courseSelect.innerHTML = '<option value="">Nenhum</option>'
-      + courses.map((course) => `<option value="${escapeHtml(course.id)}">${escapeHtml(course.title)}</option>`).join('');
-  }
-
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = new FormData(form);
@@ -114,7 +102,6 @@ export async function initAdminVideos() {
       title: data.get('title'),
       description: data.get('description') || '',
       link: data.get('link'),
-      courseId: data.get('courseId') || '',
       status: data.get('status'),
     };
     try {
@@ -146,7 +133,6 @@ export async function initAdminVideos() {
       form.elements.title.value = video.title;
       form.elements.description.value = video.description || '';
       form.elements.link.value = video.watchUrl;
-      form.elements.courseId.value = video.course?.id || '';
       form.elements.status.value = video.status;
       formTitle.textContent = 'Editar vídeo';
       form.elements.title.focus();
@@ -170,5 +156,5 @@ export async function initAdminVideos() {
   });
 
   resetForm();
-  await Promise.all([loadCourses(), reload()]);
+  await reload();
 }
