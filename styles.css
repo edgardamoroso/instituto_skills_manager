@@ -859,3 +859,51 @@ legend {
   margin-top: 1rem;
 }
 
+
+.footer a {
+  color: inherit;
+}
+
+.privacy-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0.4rem 0 0.8rem;
+}
+
+.legal-updated {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.legal-text {
+  max-width: 820px;
+  line-height: 1.65;
+}
+
+.legal-text h2 {
+  font-size: 1.2rem;
+  margin: 1.8rem 0 0.6rem;
+}
+
+.legal-text h2:first-child {
+  margin-top: 0;
+}
+
+.legal-text h3 {
+  font-size: 1rem;
+  margin: 1.1rem 0 0.3rem;
+}
+
+.legal-text ul {
+  padding-left: 1.3rem;
+}
+
+.legal-text li {
+  margin-bottom: 0.35rem;
+}
+
+.legal-text a,
+.privacy-note a {
+  color: var(--primary);
+  text-decoration: underline;
+}

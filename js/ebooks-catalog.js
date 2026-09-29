@@ -52,6 +52,7 @@ function purchaseFormMarkup() {
         <option value="credito">Cartão de crédito</option>
         <option value="debito">Cartão de débito</option>
       </select>
+      <p class="privacy-note">Ao enviar, você concorda com o tratamento dos seus dados conforme a <a href="privacidade.html">Política de Privacidade</a>.</p>
       <button class="btn btn-primary btn-full" type="submit">Solicitar compra</button>
       <p id="buy-feedback" class="form-feedback" role="status" aria-live="polite"></p>
     </form>`;
