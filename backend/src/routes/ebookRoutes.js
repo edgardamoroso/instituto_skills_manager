@@ -39,6 +39,8 @@ function fileFilter(_request, file, callback) {
 
 const upload = multer({
   dest: uploadDirectory,
+  // Nomes de arquivo com acento chegam em UTF-8; o padrão (latin1) os embaralha.
+  defParamCharset: 'utf8',
   limits: { fileSize: config.ebook.maxFileMb * 1024 * 1024, files: 3 },
   fileFilter,
 });

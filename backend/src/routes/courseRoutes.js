@@ -39,6 +39,8 @@ const ALLOWED_UPLOAD_MIME = new Set([
 
 const upload = multer({
   dest: uploadDirectory,
+  // Nomes de arquivo com acento chegam em UTF-8; o padrão (latin1) os embaralha.
+  defParamCharset: 'utf8',
   limits: { fileSize: 10 * 1024 * 1024, files: 1 },
   fileFilter: (_request, file, callback) => {
     const ext = path.extname(file.originalname).toLowerCase();

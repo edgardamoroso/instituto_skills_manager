@@ -7,6 +7,7 @@ import '../lib/config.js'; // carrega backend/.env antes de qualquer coisa
 import { seedDatabase } from './seed.js';
 import { sanitizeDescriptionHtml } from '../lib/richText.js';
 import { migrateLegacyUpload } from '../lib/lessonFiles.js';
+import { fixMojibake } from '../lib/mojibake.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dataDirectory = path.resolve(here, '../../data');
@@ -97,6 +98,16 @@ db.exec('CREATE INDEX IF NOT EXISTS idx_courses_author ON courses(author_id)');
   for (const { id, resource } of db.prepare("SELECT id, resource FROM lessons WHERE resource LIKE '/uploads/%'").all()) {
     const migrated = migrateLegacyUpload(resource);
     if (migrated) updateResource.run(migrated, id);
+  }
+}
+
+// 6) Nomes de arquivo embaralhados (upload lido como latin1). Idempotente: só
+//    atualiza quando fixMojibake muda o valor.
+for (const [table, column] of [['lessons', 'resource_name'], ['ebooks', 'file_name'], ['ebooks', 'sample_name']]) {
+  const update = db.prepare(`UPDATE ${table} SET ${column} = ? WHERE id = ?`);
+  for (const row of db.prepare(`SELECT id, ${column} AS name FROM ${table} WHERE ${column} <> ''`).all()) {
+    const fixed = fixMojibake(row.name);
+    if (fixed !== row.name) update.run(fixed, row.id);
   }
 }
 

@@ -71,6 +71,18 @@ function editorMarkup(course, backHref) {
           <button class="btn btn-secondary" type="button" id="editor-cancel" hidden>Cancelar edição</button>
         </div>
       </form>
+      <details class="batch-upload">
+        <summary>Enviar vários arquivos de uma vez</summary>
+        <p class="field-hint">
+          Cada arquivo vira uma aula do tipo "Arquivo enviado", na ordem do nome do arquivo e com o
+          nome do arquivo como título (sem a extensão). Até ${MAX_LESSON_FILE_MB} MB por arquivo.
+        </p>
+        <div class="file-picker">
+          <input id="batch-files" type="file" multiple accept="${LESSON_FILE_ACCEPT}" />
+          <button type="button" class="btn btn-primary" id="batch-submit" disabled>Enviar arquivos</button>
+        </div>
+        <p id="batch-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+      </details>
       <div id="editor-lesson-list" class="lesson-list"></div>
     </section>`;
 }
@@ -269,6 +281,60 @@ export async function initCourseEditor() {
       lessons = await api.moveLesson(courseId, lesson.id, button.dataset.move);
       renderLessons();
     }
+  });
+
+  // Envio em lote: um arquivo = uma aula, em ordem natural do nome ("Aula 2" antes de "Aula 10").
+  const batchInput = document.getElementById('batch-files');
+  const batchSubmit = document.getElementById('batch-submit');
+  const batchFeedback = document.getElementById('batch-feedback');
+  const byName = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
+
+  function showBatch(text, tone = 'ok') {
+    batchFeedback.textContent = text;
+    batchFeedback.dataset.tone = tone;
+  }
+
+  batchInput.addEventListener('change', () => {
+    const count = batchInput.files?.length || 0;
+    batchSubmit.disabled = count === 0;
+    showBatch(count ? `${count} ${count === 1 ? 'arquivo selecionado' : 'arquivos selecionados'}.` : '');
+  });
+
+  batchSubmit.addEventListener('click', async () => {
+    const files = [...(batchInput.files || [])].sort((a, b) => byName.compare(a.name, b.name));
+    if (!files.length) return;
+    batchSubmit.disabled = true;
+    batchInput.disabled = true;
+    const failed = [];
+    let sent = 0;
+    for (const file of files) {
+      showBatch(`Enviando ${sent + failed.length + 1} de ${files.length}: ${file.name}…`);
+      if (file.size > MAX_LESSON_FILE_MB * 1024 * 1024) {
+        failed.push(`${file.name} (maior que ${MAX_LESSON_FILE_MB} MB)`);
+        continue;
+      }
+      const payload = new FormData();
+      payload.set('title', file.name.replace(/\.[^.]+$/, '').trim().slice(0, 160) || file.name);
+      payload.set('description', '');
+      payload.set('resourceType', 'file');
+      payload.set('file', file);
+      try {
+        await api.addLesson(courseId, payload);
+        sent += 1;
+      } catch (error) {
+        const reason = (error instanceof ApiError && lessonErrors[error.code]) || 'erro ao enviar';
+        failed.push(`${file.name} (${reason})`);
+      }
+    }
+    batchInput.value = '';
+    batchInput.disabled = false;
+    await refresh();
+    showBatch(
+      failed.length
+        ? `${sent} ${sent === 1 ? 'aula criada' : 'aulas criadas'}. Não enviados: ${failed.join('; ')}.`
+        : `${sent} ${sent === 1 ? 'aula criada' : 'aulas criadas'}. Use ↑ ↓ para ajustar a ordem e "Editar" para mudar títulos.`,
+      failed.length ? 'error' : 'ok',
+    );
   });
 
   resetForm();

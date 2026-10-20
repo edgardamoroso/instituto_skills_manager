@@ -216,3 +216,16 @@ test('excluir aula apaga o arquivo do disco', async () => {
   assert.equal((await admin.delete(`/api/courses/${course.id}/lessons/${pdf.id}`)).status, 204);
   assert.equal(existsSync(lessonFilePath(resource)), false);
 });
+
+test('nome de arquivo com acento e travessão é preservado (UTF-8)', async () => {
+  const course = await makeCourse();
+  const created = await admin.post(`/api/courses/${course.id}/lessons`, {
+    form: lessonForm({ title: 'Aula 06', resourceType: 'file' }, { bytes: PDF_BYTES, type: 'application/pdf', name: 'Aula 06 – Vídeo e Ação.pdf' }),
+  });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.resourceName, 'Aula 06 – Vídeo e Ação.pdf');
+
+  // e o download usa o nome correto
+  const download = await admin.get(`/api/courses/${course.id}/lessons/${created.body.id}/file?download=1`);
+  assert.match(decodeURIComponent(download.headers.get('content-disposition')), /Aula 06 – Vídeo e Ação.pdf/);
+});

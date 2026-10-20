@@ -1001,3 +1001,17 @@ legend {
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+.batch-upload {
+  margin: 1.2rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.batch-upload summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
