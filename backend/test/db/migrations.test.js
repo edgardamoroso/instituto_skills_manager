@@ -4,12 +4,14 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
 const dbFile = path.join(os.tmpdir(), `sm-mig-${crypto.randomUUID()}.db`);
+const uploadsDir = path.join(os.tmpdir(), `sm-mig-uploads-${crypto.randomUUID()}`);
+const lessonsDir = path.join(os.tmpdir(), `sm-mig-lessons-${crypto.randomUUID()}`);
 
 before(() => {
   const old = new DatabaseSync(dbFile);
@@ -27,6 +29,11 @@ before(() => {
       description TEXT NOT NULL DEFAULT '', duration TEXT NOT NULL DEFAULT '',
       price_cents INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE lessons (
+      id TEXT PRIMARY KEY, course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+      title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', resource_type TEXT NOT NULL DEFAULT 'link',
+      resource TEXT NOT NULL DEFAULT '', resource_name TEXT NOT NULL DEFAULT '', position INTEGER NOT NULL DEFAULT 0
+    );
     CREATE TABLE sessions (
       token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at TEXT NOT NULL DEFAULT (datetime('now')), expires_at TEXT NOT NULL
@@ -39,10 +46,17 @@ before(() => {
   addCourse.run('c-xss', '<p onclick="alert(1)">Oi</p><img src=x onerror="alert(2)"><script>alert(3)</script>');
   addCourse.run('c-rich', '<p class="ql-align-center"><strong>Curso</strong> completo</p>');
   addCourse.run('c-text', 'Texto puro com a < b & c > d\nsegunda linha');
+  const addLesson = old.prepare("INSERT INTO lessons (id, course_id, title, resource_type, resource, resource_name) VALUES (?, 'c1', 'Aula', 'file', ?, 'apostila.pdf')");
+  addLesson.run('l-legado', '/uploads/legado123');
+  addLesson.run('l-sumiu', '/uploads/nao-existe');
+  mkdirSync(uploadsDir, { recursive: true });
+  writeFileSync(path.join(uploadsDir, 'legado123'), 'conteudo antigo');
   old.prepare("INSERT INTO sessions (token, user_id, expires_at) VALUES ('t1', 'u1', datetime('now','+1 day'))").run();
   old.close();
 
   process.env.DB_FILE = dbFile;
+  process.env.UPLOADS_DIR = uploadsDir;
+  process.env.LESSON_STORAGE_DIR = lessonsDir;
   process.env.NODE_ENV = 'test';
   process.env.SMTP_HOST = '';
 });
@@ -53,6 +67,8 @@ after(async () => {
   for (const suffix of ['', '-wal', '-shm', '-journal']) {
     try { rmSync(dbFile + suffix, { force: true }); } catch { /* preso; SO limpa */ }
   }
+  rmSync(uploadsDir, { recursive: true, force: true });
+  rmSync(lessonsDir, { recursive: true, force: true });
 });
 
 test('a migração amplia o CHECK de role e adiciona bio/active preservando linhas', async () => {
@@ -106,6 +122,20 @@ test('descrições legadas com HTML são sanitizadas; texto puro fica intacto', 
   assert.equal(description('c-rich'), '<p class="ql-align-center"><strong>Curso</strong> completo</p>');
   // e o texto puro não é tocado (o frontend o escapa na renderização)
   assert.equal(description('c-text'), 'Texto puro com a < b & c > d\nsegunda linha');
+});
+
+test('arquivos de aula em /uploads migram para o storage protegido', async () => {
+  const { db } = await import('../../src/db/index.js');
+  const resource = (id) => db.prepare('SELECT resource FROM lessons WHERE id = ?').get(id).resource;
+
+  // Given um arquivo de aula antigo, público em /uploads
+  // Then ele foi movido para o storage de aulas e o registro aponta para lá
+  assert.equal(resource('l-legado'), 'stored:legado123');
+  assert.equal(existsSync(path.join(uploadsDir, 'legado123')), false);
+  assert.equal(readFileSync(path.join(lessonsDir, 'legado123'), 'utf8'), 'conteudo antigo');
+
+  // e um registro cujo arquivo sumiu fica como estava
+  assert.equal(resource('l-sumiu'), '/uploads/nao-existe');
 });
 
 test('nenhuma violação de FK após a migração', async () => {

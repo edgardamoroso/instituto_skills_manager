@@ -6,7 +6,7 @@ const CSP = [
   "style-src 'self'",
   "font-src 'self'",
   "img-src 'self' data: https:",
-  "frame-src https:",
+  "frame-src 'self' https:",
   "media-src 'self' https:",
   "connect-src 'self'",
   "form-action 'self'",

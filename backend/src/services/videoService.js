@@ -60,7 +60,7 @@ export function parseVideoLink(value) {
   throw badRequest('VIDEO_LINK_UNSUPPORTED');
 }
 
-function embedUrl(provider, ref) {
+export function embedUrlFor(provider, ref) {
   return provider === 'drive'
     ? `https://drive.google.com/file/d/${ref}/preview`
     : `https://www.youtube-nocookie.com/embed/${ref}`;
@@ -78,7 +78,7 @@ function toApi(row) {
     title: row.title,
     description: row.description,
     provider: row.provider,
-    embedUrl: embedUrl(row.provider, row.video_ref),
+    embedUrl: embedUrlFor(row.provider, row.video_ref),
     watchUrl: watchUrl(row.provider, row.video_ref),
     status: row.status,
     createdAt: row.created_at,

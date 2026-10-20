@@ -958,3 +958,46 @@ legend {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Aulas: sequência e editor ---- */
+.resource-frame-doc {
+  aspect-ratio: auto;
+  height: 75vh;
+  min-height: 420px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+
+.public-lesson.is-locked {
+  opacity: 0.65;
+}
+
+.lesson-locked {
+  font-weight: 600;
+}
+
+.lesson-done {
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.lesson-open {
+  margin-top: 0.4rem;
+}
+
+.lesson-item.is-editing {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px #dbeafe;
+}
+
+.file-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.lesson-item .actions .action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

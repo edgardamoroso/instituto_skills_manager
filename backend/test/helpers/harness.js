@@ -15,8 +15,10 @@ process.env.DB_FILE = dbFile;
 // Storage de eBooks e uploads isolados por processo — não sujar backend/ nos testes.
 const storageDir = path.join(os.tmpdir(), `sm-test-storage-${crypto.randomUUID()}`);
 const uploadsDir = path.join(os.tmpdir(), `sm-test-uploads-${crypto.randomUUID()}`);
+const lessonsDir = path.join(os.tmpdir(), `sm-test-lessons-${crypto.randomUUID()}`);
 process.env.EBOOK_STORAGE_DIR = storageDir;
 process.env.UPLOADS_DIR = uploadsDir;
+process.env.LESSON_STORAGE_DIR = lessonsDir;
 
 // Config mínima para o app subir fora de produção.
 process.env.PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:3000';
@@ -39,7 +41,7 @@ export async function removeDbFile() {
       /* arquivo temporário; o SO limpa se ficar preso */
     }
   }
-  for (const dir of [storageDir, uploadsDir]) {
+  for (const dir of [storageDir, uploadsDir, lessonsDir]) {
     try {
       rmSync(dir, { recursive: true, force: true });
     } catch {

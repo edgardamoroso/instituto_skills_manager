@@ -57,6 +57,9 @@ export const api = {
   courseContent: (id) => request(`/courses/${id}/content`),
   addLesson: (id, form) => request(`/courses/${id}/lessons`, { method: 'POST', form }),
   deleteLesson: (id, lessonId) => request(`/courses/${id}/lessons/${lessonId}`, { method: 'DELETE' }),
+  updateLesson: (id, lessonId, form) => request(`/courses/${id}/lessons/${lessonId}`, { method: 'PATCH', form }),
+  moveLesson: (id, lessonId, direction) => request(`/courses/${id}/lessons/${lessonId}/move`, { method: 'POST', body: { direction } }),
+  openLesson: (id, lessonId) => request(`/courses/${id}/lessons/${lessonId}/open`, { method: 'POST' }),
 
   // eBooks
   ebooks: () => request('/ebooks'),

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import '../lib/config.js'; // carrega backend/.env antes de qualquer coisa
 import { seedDatabase } from './seed.js';
 import { sanitizeDescriptionHtml } from '../lib/richText.js';
+import { migrateLegacyUpload } from '../lib/lessonFiles.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dataDirectory = path.resolve(here, '../../data');
@@ -85,6 +86,17 @@ db.exec('CREATE INDEX IF NOT EXISTS idx_courses_author ON courses(author_id)');
     if (!HAS_HTML_TAG.test(description)) continue;
     const clean = sanitizeDescriptionHtml(description);
     if (clean !== description) updateDescription.run(clean, id);
+  }
+}
+
+// 5) Arquivos de aula enviados antes do storage protegido ficavam em /uploads,
+//    acessíveis por qualquer um com o link. Move para o storage de aulas.
+//    Idempotente: só pega recursos que ainda começam com /uploads/.
+{
+  const updateResource = db.prepare('UPDATE lessons SET resource = ? WHERE id = ?');
+  for (const { id, resource } of db.prepare("SELECT id, resource FROM lessons WHERE resource LIKE '/uploads/%'").all()) {
+    const migrated = migrateLegacyUpload(resource);
+    if (migrated) updateResource.run(migrated, id);
   }
 }
 

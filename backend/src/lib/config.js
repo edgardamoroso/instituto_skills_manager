@@ -44,6 +44,8 @@ export const config = {
     whatsapp: (process.env.CONTACT_WHATSAPP || '').replace(/\D/g, ''),
   },
   uploadsDir: process.env.UPLOADS_DIR || path.join(backendDir, 'uploads'),
+  // Arquivos de aula: fora da árvore estática; só saem pela rota autenticada da aula.
+  lessonStorageDir: process.env.LESSON_STORAGE_DIR || path.join(backendDir, 'storage', 'lessons'),
   ebook: {
     downloadTtlHours: Number(process.env.EBOOK_DOWNLOAD_TTL_HOURS) || 72,
     maxDownloads: Number(process.env.EBOOK_DOWNLOAD_MAX) || 5,

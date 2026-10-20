@@ -2,7 +2,6 @@ import { api, ApiError } from './api.js';
 import { guardCourseEditor } from './session.js';
 import { formatBRL, courseTypeLabel, escapeHtml, descriptionExcerpt } from './format.js';
 
-const resourceLabels = { video: 'Vídeo', pdf: 'PDF', link: 'Link externo', file: 'Arquivo' };
 const HAS_HTML_TAG = /<[a-z][\s\S]*>/i;
 
 // Alinhamento como CLASSE (ql-align-*), não estilo inline — o CSP do site
@@ -89,14 +88,8 @@ export async function initAdminCourses() {
     }
   }
 
-  const lessonManager = document.getElementById('lesson-manager');
-  const lessonForm = document.getElementById('lesson-form');
-  const lessonList = document.getElementById('lesson-list');
-  const lessonCourseTitle = document.getElementById('lesson-course-title');
-
   let courses = [];
   let editingId = null;
-  let managingCourseId = null;
 
   function resetForm() {
     form.reset();
@@ -121,8 +114,7 @@ export async function initAdminCourses() {
           </div>
           <div class="actions">
             <button class="action-btn edit" data-action="edit" data-id="${course.id}">Editar</button>
-            <button class="action-btn lessons" data-action="lessons" data-id="${course.id}">Aulas</button>
-            <a class="action-btn lessons" href="gerenciar-curso.html?id=${course.id}">Abrir editor</a>
+            <a class="action-btn lessons" href="gerenciar-curso.html?id=${course.id}">Aulas</a>
             <button class="action-btn delete" data-action="delete" data-id="${course.id}">Excluir</button>
           </div>
         </div>`).join('')
@@ -132,36 +124,6 @@ export async function initAdminCourses() {
   async function reload() {
     courses = await loadCourses();
     render();
-    if (managingCourseId && !courses.some((course) => course.id === managingCourseId)) {
-      lessonManager.hidden = true;
-      managingCourseId = null;
-    }
-  }
-
-  async function openLessonManager(courseId) {
-    const course = await api.course(courseId);
-    managingCourseId = courseId;
-    lessonManager.hidden = false;
-    lessonCourseTitle.textContent = course.title;
-    renderLessons(course.lessons || []);
-    lessonManager.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function renderLessons(lessons) {
-    lessonList.innerHTML = lessons.length
-      ? lessons.map((lesson, index) => `
-        <article class="lesson-item">
-          <div class="lesson-number">${String(index + 1).padStart(2, '0')}</div>
-          <div class="lesson-copy">
-            <strong>${escapeHtml(lesson.title)}</strong>
-            <p>${escapeHtml(lesson.description || 'Sem descrição adicional.')}</p>
-            <span class="badge">${resourceLabels[lesson.resourceType] || 'Recurso'}${lesson.resourceName ? ` · ${escapeHtml(lesson.resourceName)}` : ''}</span>
-          </div>
-          <div class="actions">
-            <button class="action-btn delete" data-lesson-delete="${lesson.id}">Excluir</button>
-          </div>
-        </article>`).join('')
-      : '<p class="empty-state">Nenhuma aula cadastrada. Comece adicionando o primeiro conteúdo.</p>';
   }
 
   form.addEventListener('submit', async (event) => {
@@ -213,10 +175,6 @@ export async function initAdminCourses() {
       document.getElementById('title').focus();
     }
 
-    if (action === 'lessons') {
-      await openLessonManager(id);
-    }
-
     if (action === 'delete') {
       if (!window.confirm(`Excluir o curso "${course.title}"? As matrículas e pagamentos vinculados também serão removidos.`)) return;
       await api.deleteCourse(id);
@@ -225,162 +183,5 @@ export async function initAdminCourses() {
     }
   });
 
-  if (lessonForm) {
-    lessonForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (!managingCourseId) return;
-      const data = new FormData(lessonForm);
-      const file = data.get('resourceFile');
-      const payload = new FormData();
-      payload.set('title', data.get('lessonTitle'));
-      payload.set('description', data.get('lessonDescription') || '');
-      payload.set('resourceType', data.get('resourceType'));
-      if (file instanceof File && file.size) {
-        if (file.size > 8 * 1024 * 1024) {
-          alert('Escolha um arquivo de até 8 MB. Para vídeos, use um link externo.');
-          return;
-        }
-        payload.set('file', file);
-      } else {
-        payload.set('resource', (data.get('resourceUrl') || '').toString().trim());
-      }
-      try {
-        await api.addLesson(managingCourseId, payload);
-        lessonForm.reset();
-        const course = await api.course(managingCourseId);
-        renderLessons(course.lessons || []);
-        await reload();
-      } catch {
-        alert('Informe um título e um link (ou arquivo) para a aula.');
-      }
-    });
-
-    document.getElementById('cancel-lesson-edit')?.addEventListener('click', () => lessonForm.reset());
-    document.getElementById('close-lesson-manager')?.addEventListener('click', () => {
-      lessonManager.hidden = true;
-      managingCourseId = null;
-    });
-
-    lessonList.addEventListener('click', async (event) => {
-      const button = event.target.closest('[data-lesson-delete]');
-      if (!button || !managingCourseId) return;
-      await api.deleteLesson(managingCourseId, button.dataset.lessonDelete);
-      const course = await api.course(managingCourseId);
-      renderLessons(course.lessons || []);
-      await reload();
-    });
-  }
-
   await reload();
-}
-
-/* ------------------------------------------------------------------ */
-/* gerenciar-curso.html — editor de aulas em página própria            */
-/* ------------------------------------------------------------------ */
-
-export async function initCourseEditor() {
-  const root = document.getElementById('course-editor-page');
-  if (!root) return;
-  const user = await guardCourseEditor();
-  if (!user) return;
-  const backHref = user.role === 'author' ? 'meus-cursos.html' : 'admin.html';
-
-  const courseId = new URLSearchParams(window.location.search).get('id');
-  let course;
-  try {
-    course = await api.course(courseId);
-  } catch {
-    root.innerHTML = `<p class="empty-state">Curso não encontrado. <a href="${backHref}">Voltar</a></p>`;
-    return;
-  }
-
-  root.innerHTML = `
-    <section class="course-heading">
-      <a class="back-link" href="${backHref}">← Voltar</a>
-      <span class="type-pill">Editor de conteúdo</span>
-      <h1>${escapeHtml(course.title)}</h1>
-      <p class="course-description">Cadastre e organize as aulas deste curso.</p>
-    </section>
-    <section class="panel">
-      <form id="editor-lesson-form" class="lesson-form">
-        <label for="editor-title">Título da aula</label>
-        <input id="editor-title" name="title" required />
-        <label for="editor-description">Descrição</label>
-        <textarea id="editor-description" name="description" rows="2"></textarea>
-        <div class="lesson-fields">
-          <div>
-            <label for="editor-resource-type">Tipo</label>
-            <select id="editor-resource-type" name="resourceType">
-              <option value="video">Vídeo por link</option>
-              <option value="pdf">PDF por link</option>
-              <option value="link">Link externo</option>
-              <option value="file">Arquivo local</option>
-            </select>
-          </div>
-          <div>
-            <label for="editor-resource">URL</label>
-            <input id="editor-resource" name="resource" type="url" placeholder="https://..." />
-          </div>
-        </div>
-        <label for="editor-file">Ou selecione um arquivo</label>
-        <input id="editor-file" name="file" type="file" />
-        <button class="btn btn-primary" type="submit">Adicionar aula</button>
-      </form>
-      <div id="editor-lesson-list" class="lesson-list"></div>
-    </section>`;
-
-  const form = document.getElementById('editor-lesson-form');
-  const listNode = document.getElementById('editor-lesson-list');
-
-  function renderLessons(lessons) {
-    listNode.innerHTML = lessons.length
-      ? lessons.map((lesson, index) => `
-        <article class="lesson-item">
-          <div class="lesson-number">${String(index + 1).padStart(2, '0')}</div>
-          <div class="lesson-copy">
-            <strong>${escapeHtml(lesson.title)}</strong>
-            <p>${escapeHtml(lesson.description || 'Sem descrição adicional.')}</p>
-            <span class="badge">${resourceLabels[lesson.resourceType] || 'Recurso'}${lesson.resourceName ? ` · ${escapeHtml(lesson.resourceName)}` : ''}</span>
-          </div>
-          <button class="action-btn delete" data-editor-delete="${lesson.id}">Excluir</button>
-        </article>`).join('')
-      : '<p class="empty-state">Nenhuma aula cadastrada.</p>';
-  }
-
-  async function refresh() {
-    const fresh = await api.course(courseId);
-    renderLessons(fresh.lessons || []);
-  }
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const data = new FormData(form);
-    const file = data.get('file');
-    const payload = new FormData();
-    payload.set('title', data.get('title'));
-    payload.set('description', data.get('description') || '');
-    payload.set('resourceType', data.get('resourceType'));
-    if (file instanceof File && file.size) {
-      if (file.size > 8 * 1024 * 1024) return alert('Escolha um arquivo de até 8 MB.');
-      payload.set('file', file);
-    } else {
-      payload.set('resource', (data.get('resource') || '').toString().trim());
-    }
-    try {
-      await api.addLesson(courseId, payload);
-      form.reset();
-      await refresh();
-    } catch {
-      alert('Informe título e recurso.');
-    }
-  });
-
-  listNode.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-editor-delete]');
-    if (!button) return;
-    await api.deleteLesson(courseId, button.dataset.editorDelete);
-    await refresh();
-  });
-
-  renderLessons(course.lessons || []);
 }

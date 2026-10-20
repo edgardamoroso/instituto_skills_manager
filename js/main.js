@@ -1,7 +1,8 @@
 import { renderAuthNav } from './session.js';
 import { initCatalog } from './catalog.js';
 import { initCoursePage } from './course-page.js';
-import { initAdminCourses, initCourseEditor } from './admin-courses.js';
+import { initAdminCourses } from './admin-courses.js';
+import { initCourseEditor } from './lesson-editor.js';
 import { initAdminStudents } from './admin-students.js';
 import { initEnrollmentsPage } from './admin-enrollments.js';
 import { initEnrollRequestPage } from './enroll-request.js';
