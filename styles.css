@@ -163,7 +163,18 @@ h1 {
   background: var(--primary-dark);
 }
 
+/* Padrão para fundos claros (formulários, painéis); no banner escuro (.hero)
+   mantém o estilo translúcido. */
 .btn-secondary {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: #cbd5e1;
+}
+
+.hero .btn-secondary {
   background: rgba(255, 255, 255, 0.16);
   color: white;
 }
@@ -1014,4 +1025,143 @@ legend {
   cursor: pointer;
   font-weight: 700;
   color: var(--primary-dark);
+}
+
+/* ---- Progresso no curso e certificado ---- */
+.course-progress,
+.course-complete {
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.course-progress p {
+  margin: 0 0 0.6rem;
+}
+
+.progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 0.4s ease;
+}
+
+.course-complete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fffbeb;
+  border-color: #f5d48b;
+}
+
+.course-complete h3 {
+  margin: 0 0 0.2rem;
+}
+
+.course-complete p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.certificate-toolbar {
+  max-width: 960px;
+  margin: 0 auto 1.2rem;
+}
+
+.certificate-valid {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.certificate {
+  max-width: 960px;
+  aspect-ratio: 297 / 210;
+  margin: 0 auto;
+  padding: 3.2rem 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #fff;
+  border: 6px solid #14213d;
+  outline: 1.5px solid #a97c2a;
+  outline-offset: -16px;
+  color: #14213d;
+}
+
+.certificate-logo {
+  width: 240px;
+  max-width: 60%;
+}
+
+.certificate-kicker {
+  margin: 1.4rem 0 1rem;
+  color: #a97c2a;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.certificate-lead,
+.certificate-text {
+  margin: 0.3rem 0;
+  font-size: 1.05rem;
+}
+
+.certificate-lead {
+  color: var(--muted);
+}
+
+.certificate-name {
+  margin: 0.4rem 0 0.8rem;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+}
+
+.certificate-course {
+  margin: 0.2rem 0;
+  font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+}
+
+.certificate-sign {
+  margin-top: auto;
+  padding-top: 0.6rem;
+  min-width: 280px;
+  border-top: 1px solid #14213d;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.certificate-sign span,
+.certificate-code {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.certificate-code {
+  margin: 1rem 0 0;
+}
+
+@media (max-width: 640px) {
+  .certificate {
+    aspect-ratio: auto;
+    padding: 2rem 1.2rem 1.4rem;
+  }
+
+  .certificate-sign {
+    margin-top: 1.6rem;
+    min-width: 0;
+    width: 100%;
+  }
 }

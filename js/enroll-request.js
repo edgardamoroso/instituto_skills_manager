@@ -33,8 +33,10 @@ export async function initEnrollRequestPage() {
 
   let courses = [];
   let mine = [];
+  let certificates = [];
   try {
     [courses, mine] = await Promise.all([api.courses(), api.myEnrollments()]);
+    certificates = await api.myCertificates().catch(() => []);
   } catch {
     root.innerHTML = '<p class="empty-state">Não foi possível carregar os cursos agora.</p>';
     return;
@@ -63,6 +65,11 @@ export async function initEnrollRequestPage() {
   const feedback = document.getElementById('request-feedback');
   const listNode = document.getElementById('my-enrollments');
 
+  const certificateLink = (courseId) => {
+    const cert = certificates.find((c) => c.courseId === courseId);
+    return cert ? `<a class="action-btn lessons" href="certificado.html?code=${encodeURIComponent(cert.code)}">🎓 Certificado</a>` : '';
+  };
+
   function renderMine(items) {
     listNode.innerHTML = items.length
       ? items.map((item) => `
@@ -75,7 +82,10 @@ export async function initEnrollRequestPage() {
             </p>
             ${item.payment.total ? `<p>${item.payment.paidCount}/${item.payment.total} parcelas pagas${item.payment.overdueCents ? ' · há parcelas em atraso' : ''}</p>` : ''}
           </div>
-          <a class="action-btn edit" href="curso.html?id=${item.courseId}">Abrir curso</a>
+          <div class="actions">
+            <a class="action-btn edit" href="curso.html?id=${item.courseId}">Abrir curso</a>
+            ${certificateLink(item.courseId)}
+          </div>
         </article>`).join('')
       : '<p class="empty-state">Você ainda não tem matrículas.</p>';
   }

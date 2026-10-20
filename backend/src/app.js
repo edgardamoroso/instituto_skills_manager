@@ -18,6 +18,7 @@ import enrollmentRoutes from './routes/enrollmentRoutes.js';
 import overviewRoutes from './routes/overviewRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import videoRoutes from './routes/videoRoutes.js';
+import certificateRoutes from './routes/certificateRoutes.js';
 
 assertProductionConfig();
 
@@ -67,6 +68,7 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/overview', overviewRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/certificates', certificateRoutes);
 app.use('/api', (_request, response) => response.status(404).json({ error: 'NOT_FOUND' }));
 
 app.use((request, response, next) => {

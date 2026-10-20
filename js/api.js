@@ -119,6 +119,11 @@ export const api = {
   updateVideo: (id, body) => request(`/videos/${id}`, { method: 'PATCH', body }),
   deleteVideo: (id) => request(`/videos/${id}`, { method: 'DELETE' }),
 
+  // certificados
+  issueCertificate: (courseId) => request('/certificates', { method: 'POST', body: { courseId } }),
+  certificate: (code) => request(`/certificates/${encodeURIComponent(code)}`),
+  myCertificates: () => request('/certificates/mine'),
+
   // fale conosco
   contactConfig: () => request('/contact/config'),
   sendContact: (body) => request('/contact', { method: 'POST', body }),

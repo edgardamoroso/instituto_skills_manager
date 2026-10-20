@@ -7,6 +7,7 @@ import { badRequest, notFound, unauthorized, forbidden } from '../lib/errors.js'
 import { str, optionalStr, oneOf } from '../lib/validate.js';
 import { sanitizeDescriptionHtml } from '../lib/richText.js';
 import { parseVideoLink, embedUrlFor } from './videoService.js';
+import { certificateFor, courseProgress } from './certificateService.js';
 
 const listCoursesStmt = db.prepare('SELECT * FROM courses ORDER BY created_at DESC, title ASC');
 const listCoursesByAuthorStmt = db.prepare('SELECT * FROM courses WHERE author_id = ? ORDER BY created_at DESC, title ASC');
@@ -293,6 +294,8 @@ export function getCourseContent(courseId, user) {
   return {
     course: courseToApi(row),
     preview,
+    progress: preview ? null : courseProgress(user.id, courseId),
+    certificate: preview ? null : certificateFor(user.id, courseId),
     lessons: lessonsWithProgress(courseId, user, preview).map(({ lesson, unlocked, opened }) => ({
       ...lessonToApi(lesson, { withResource: unlocked, forStudent: !preview }),
       locked: !unlocked,

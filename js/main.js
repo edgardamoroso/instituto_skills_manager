@@ -15,6 +15,7 @@ import { initAdminEbooks, initEbookEditor } from './admin-ebooks.js';
 import { initAdminOrders } from './admin-orders.js';
 import { initContactPage } from './contact.js';
 import { initVideoFeed, initAdminVideos } from './videos.js';
+import { initCertificatePage } from './certificate.js';
 
 const routes = {
   home: initCatalog,
@@ -41,6 +42,7 @@ const routes = {
   contact: initContactPage,
   news: initVideoFeed,
   'admin-videos': initAdminVideos,
+  certificate: initCertificatePage,
 };
 
 async function boot() {

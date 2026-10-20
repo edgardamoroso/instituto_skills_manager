@@ -168,3 +168,17 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
 );
 
 CREATE INDEX IF NOT EXISTS idx_lesson_progress_lesson ON lesson_progress(lesson_id);
+
+-- Certificados de conclusão. Nome do aluno, curso e carga horária ficam
+-- gravados como estavam na emissão. O código é público (verificação).
+CREATE TABLE IF NOT EXISTS certificates (
+  code          TEXT PRIMARY KEY,
+  user_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id     TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  student_name  TEXT NOT NULL,
+  course_title  TEXT NOT NULL,
+  duration      TEXT NOT NULL DEFAULT '',
+  author_name   TEXT NOT NULL DEFAULT '',
+  issued_at     TEXT NOT NULL,
+  UNIQUE (user_id, course_id)
+);

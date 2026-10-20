@@ -53,14 +53,41 @@ function lessonMarkup(lesson, index, preview) {
     </article>`;
 }
 
+// Progresso do aluno e, ao concluir todas as aulas, o acesso ao certificado.
+function progressMarkup(data) {
+  const { progress, certificate } = data;
+  if (!progress || !progress.total) return '';
+  if (progress.completed) {
+    const action = certificate
+      ? `<a class="btn btn-primary" href="certificado.html?code=${encodeURIComponent(certificate.code)}">Ver certificado</a>`
+      : '<button class="btn btn-primary" type="button" data-certificate>Ver certificado</button>';
+    return `
+      <div class="course-complete">
+        <div>
+          <h3>🎓 Parabéns, você concluiu o curso!</h3>
+          <p>Seu certificado de conclusão está disponível para ver e baixar.</p>
+        </div>
+        ${action}
+      </div>`;
+  }
+  const percent = Math.round((progress.opened / progress.total) * 100);
+  return `
+    <div class="course-progress" aria-label="Progresso no curso">
+      <p><strong>${progress.opened} de ${progress.total}</strong> aulas concluídas · o certificado é liberado ao abrir todas</p>
+      <div class="progress-track"><div class="progress-fill" data-percent="${percent}"></div></div>
+    </div>`;
+}
+
 function renderLessonList(container, data) {
   const lessons = data.lessons || [];
   const note = data.preview
     ? '<p class="panel-note">Prévia de quem edita o curso: todas as aulas aparecem liberadas. O aluno libera uma de cada vez, abrindo a anterior.</p>'
     : '';
   container.innerHTML = lessons.length
-    ? note + lessons.map((lesson, index) => lessonMarkup(lesson, index, data.preview)).join('')
+    ? note + progressMarkup(data) + lessons.map((lesson, index) => lessonMarkup(lesson, index, data.preview)).join('')
     : '<p class="empty-state">Este curso ainda não possui aulas publicadas.</p>';
+  // Largura da barra via CSSOM: o CSP do site bloqueia style="" no HTML.
+  container.querySelectorAll('.progress-fill').forEach((bar) => { bar.style.width = `${bar.dataset.percent}%`; });
 }
 
 function contentNotice(title, text, actionHtml = '') {
@@ -88,6 +115,18 @@ async function renderContent(courseId, container) {
 
     // "Abrir aula": registra a abertura (libera a próxima) e mostra o conteúdo.
     container.addEventListener('click', async (event) => {
+      const certButton = event.target.closest('[data-certificate]');
+      if (certButton) {
+        certButton.disabled = true;
+        try {
+          const certificate = await api.issueCertificate(courseId);
+          window.location.href = `certificado.html?code=${encodeURIComponent(certificate.code)}`;
+        } catch {
+          certButton.disabled = false;
+          certButton.textContent = 'Tentar de novo';
+        }
+        return;
+      }
       const button = event.target.closest('[data-open]');
       if (!button) return;
       button.disabled = true;
