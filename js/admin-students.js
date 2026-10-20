@@ -113,7 +113,7 @@ export async function initAdminStudents() {
     if (button.dataset.action === 'reset') {
       if (!window.confirm(`Gerar uma nova senha para "${student.name}"?`)) return;
       const result = await api.resetStudentPassword(student.id);
-      showFeedback(`Nova senha de ${student.name}: ${result.temporaryPassword}`);
+      showFeedback(`Senha redefinida. Enviamos para ${result.email} um e-mail com o link para criar uma senha nova. Senha provisória (caso precise): ${result.temporaryPassword}`);
     }
 
     if (button.dataset.action === 'delete') {

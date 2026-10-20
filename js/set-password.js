@@ -1,5 +1,5 @@
 import { api, ApiError } from './api.js';
-import { clearUserCache } from './session.js';
+import { clearUserCache, roleHome } from './session.js';
 
 export async function initSetPasswordPage() {
   const form = document.getElementById('set-password-form');
@@ -35,8 +35,7 @@ export async function initSetPasswordPage() {
       clearUserCache();
       // Leva direto para a área de cada perfil — "Minha conta" abre com o formulário
       // de troca de senha e o navegador o preenche sozinho, o que confunde.
-      const role = result?.user?.role;
-      window.location.href = role === 'author' ? 'meus-cursos.html' : role === 'student' ? 'inscricao.html' : 'index.html';
+      window.location.href = roleHome(result?.user);
     } catch (error) {
       feedback.dataset.tone = 'error';
       if (error instanceof ApiError && error.code === 'PASSWORD_SET_INVALID') {

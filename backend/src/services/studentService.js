@@ -91,11 +91,13 @@ export function updateStudent(id, input) {
 }
 
 export function resetStudentPassword(id) {
-  if (!getStmt.get(id)) throw notFound('STUDENT_NOT_FOUND');
+  const row = getStmt.get(id);
+  if (!row) throw notFound('STUDENT_NOT_FOUND');
   const temporaryPassword = randomPassword();
   setPasswordStmt.run(hashPassword(temporaryPassword), id);
   deleteSessionsStmt.run(id);
-  return { temporaryPassword };
+  issuePasswordSet({ id, name: row.name, email: row.email }, { kind: 'student-reset' });
+  return { temporaryPassword, email: row.email };
 }
 
 export function deleteStudent(id) {

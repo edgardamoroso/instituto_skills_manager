@@ -92,10 +92,27 @@ test('reset de senha gera nova senha e invalida sessões', async () => {
   await studentClient.post('/api/auth/login', { body: { email: created.email, password: 'inicial-1234' } });
   assert.equal((await studentClient.get('/api/auth/me')).status, 200);
 
+  clearOutbox();
   const reset = await admin.post(`/api/students/${created.id}/password-reset`);
   assert.equal(reset.status, 200);
   assert.ok(reset.body.temporaryPassword.length >= 8);
+  assert.equal(reset.body.email, created.email);
   assert.equal((await studentClient.get('/api/auth/me')).status, 401);
+
+  // e o aluno recebe o e-mail de redefinição, sem a senha, com link que funciona
+  assert.equal(sentMessages.length, 1);
+  const message = sentMessages[0];
+  assert.equal(message.to, created.email);
+  assert.match(message.subject, /Redefinição de senha/);
+  assert.ok(!message.text.includes(reset.body.temporaryPassword), 'a senha não pode ir no e-mail');
+  const set = await createClient(server.baseUrl).post('/api/auth/set-password', {
+    body: { token: tokenFromEmail(message), password: 'nova-senha-123' },
+  });
+  assert.equal(set.status, 200);
+  const login = await createClient(server.baseUrl).post('/api/auth/login', {
+    body: { email: created.email, password: 'nova-senha-123' },
+  });
+  assert.equal(login.status, 200);
 });
 
 test('exclui aluno; 404 depois', async () => {

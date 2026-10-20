@@ -69,23 +69,36 @@ export async function renderAuthNav() {
   }
 }
 
-export async function guardAdmin() {
-  const user = await currentUser();
-  if (!user || user.role !== 'admin') {
-    const next = encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search);
-    window.location.href = `login.html?next=${next}`;
+// Página inicial de cada perfil logado.
+export function roleHome(user) {
+  if (user?.role === 'admin') return 'matriculas.html';
+  if (user?.role === 'author') return 'meus-cursos.html';
+  if (user?.role === 'student') return 'inscricao.html';
+  return 'index.html';
+}
+
+// Sem sessão: vai para o login e volta depois. Logado sem permissão: vai para a
+// própria área — mandar para o login criaria um laço (o login devolve quem já
+// está logado para `next`, que manda de volta para o login).
+function denyAccess(user) {
+  if (user) {
+    window.location.href = roleHome(user);
     return null;
   }
+  const next = encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search);
+  window.location.href = `login.html?next=${next}`;
+  return null;
+}
+
+export async function guardAdmin() {
+  const user = await currentUser();
+  if (!user || user.role !== 'admin') return denyAccess(user);
   return user;
 }
 
 export async function guardCourseEditor() {
   const user = await currentUser();
-  if (!user || (user.role !== 'admin' && user.role !== 'author')) {
-    const next = encodeURIComponent(window.location.pathname.replace(/^\//, '') + window.location.search);
-    window.location.href = `login.html?next=${next}`;
-    return null;
-  }
+  if (!user || (user.role !== 'admin' && user.role !== 'author')) return denyAccess(user);
   return user;
 }
 

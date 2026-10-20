@@ -77,6 +77,19 @@ export function issuePasswordSet(user, { kind = 'author' } = {}) {
     });
     return;
   }
+  if (kind === 'student-reset') {
+    sendMail({
+      to: user.email,
+      subject: 'Redefinição de senha — Instituto Skills Manager',
+      text: `Olá, ${user.name}.\n\nA senha da sua conta no Instituto Skills Manager foi redefinida pela nossa equipe `
+        + 'e a senha anterior deixou de valer.\n\n'
+        + `Crie uma senha nova neste link:\n${link}\n\n`
+        + `O link expira em 72 horas. Depois disso, entre em ${config.publicUrl}/login.html `
+        + 'com a senha informada pela nossa equipe ou peça um novo acesso pelo Fale Conosco.\n\n'
+        + 'Se você não pediu essa alteração, fale com a gente pelo Fale Conosco.',
+    });
+    return;
+  }
   sendMail({
     to: user.email,
     subject: 'Defina sua senha — Instituto Skills Manager',
