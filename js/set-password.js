@@ -31,9 +31,12 @@ export async function initSetPasswordPage() {
       return;
     }
     try {
-      await api.setPassword(token, password);
+      const result = await api.setPassword(token, password);
       clearUserCache();
-      window.location.href = 'conta.html';
+      // Leva direto para a área de cada perfil — "Minha conta" abre com o formulário
+      // de troca de senha e o navegador o preenche sozinho, o que confunde.
+      const role = result?.user?.role;
+      window.location.href = role === 'author' ? 'meus-cursos.html' : role === 'student' ? 'inscricao.html' : 'index.html';
     } catch (error) {
       feedback.dataset.tone = 'error';
       if (error instanceof ApiError && error.code === 'PASSWORD_SET_INVALID') {
