@@ -1135,12 +1135,26 @@ legend {
 
 .certificate-sign {
   margin-top: auto;
-  padding-top: 0.6rem;
-  min-width: 280px;
-  border-top: 1px solid #14213d;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+}
+
+/* Assinatura fictícia: nome do autor em fonte manuscrita sobre a linha. */
+.certificate-sign .certificate-signature {
+  font-family: 'Great Vibes', cursive;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: #14213d;
+  padding: 0 1rem 0.3rem;
+  border-bottom: 1px solid #14213d;
+  margin-bottom: 0.4rem;
+}
+
+.certificate-sign > strong:first-child {
+  padding-top: 0.6rem;
+  border-top: 1px solid #14213d;
 }
 
 .certificate-sign span,

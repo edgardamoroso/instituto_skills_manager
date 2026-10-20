@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
 
 // Certificado em PDF (A4 paisagem). Fontes padrão do PDF (Helvetica), que cobrem
@@ -8,6 +10,10 @@ const NAVY = '#14213D';
 const GOLD = '#A97C2A';
 const ORANGE = '#E8971E';
 const MUTED = '#64748B';
+
+// Assinatura (fictícia) do autor: o nome escrito numa fonte manuscrita livre
+// (Great Vibes, SIL OFL — ver assets/fonts/OFL-great-vibes.txt).
+const SIGNATURE_FONT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../assets/fonts/great-vibes-400.woff');
 
 export function formatIssuedDate(iso) {
   return new Date(iso).toLocaleDateString('pt-BR', {
@@ -76,13 +82,19 @@ export function renderCertificatePdf(cert, { verifyUrl }) {
       .font('Helvetica').fontSize(15)
       .text(`no Instituto Skills Manager${workload}, em ${formatIssuedDate(cert.issuedAt)}.`, 80, doc.y + 8, center);
 
-    // Assinatura / autor
-    const lineY = height - 150;
-    doc.lineWidth(1).strokeColor(NAVY).moveTo(width / 2 - 140, lineY).lineTo(width / 2 + 140, lineY).stroke();
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12)
-      .text('Instituto Skills Manager', 80, lineY + 8, center);
+    // Assinatura: com autor, o nome dele "assinado" sobre a linha; sem autor, só o Instituto.
+    const lineY = height - 140;
     if (cert.authorName) {
-      doc.fillColor(MUTED).font('Helvetica').fontSize(11).text(`Autor do curso: ${cert.authorName}`, 80, doc.y + 2, center);
+      doc.fillColor(NAVY).font(SIGNATURE_FONT).fontSize(34)
+        .text(cert.authorName, 80, lineY - 46, { ...center, lineBreak: false });
+    }
+    doc.lineWidth(1).strokeColor(NAVY).moveTo(width / 2 - 150, lineY).lineTo(width / 2 + 150, lineY).stroke();
+    if (cert.authorName) {
+      doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text(cert.authorName, 80, lineY + 8, center);
+      doc.fillColor(MUTED).font('Helvetica').fontSize(10.5)
+        .text('Autor do curso · Instituto Skills Manager', 80, doc.y + 2, center);
+    } else {
+      doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text('Instituto Skills Manager', 80, lineY + 8, center);
     }
 
     // Verificação

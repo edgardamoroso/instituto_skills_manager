@@ -20,8 +20,11 @@ function certificateMarkup(cert) {
       <h2 class="certificate-course">${escapeHtml(cert.courseTitle)}</h2>
       <p class="certificate-text">no Instituto Skills Manager${workload}, em ${escapeHtml(longDate(cert.issuedAt))}.</p>
       <div class="certificate-sign">
-        <strong>Instituto Skills Manager</strong>
-        ${cert.authorName ? `<span>Autor do curso: ${escapeHtml(cert.authorName)}</span>` : ''}
+        ${cert.authorName
+          ? `<span class="certificate-signature" aria-hidden="true">${escapeHtml(cert.authorName)}</span>
+        <strong>${escapeHtml(cert.authorName)}</strong>
+        <span>Autor do curso · Instituto Skills Manager</span>`
+          : '<strong>Instituto Skills Manager</strong>'}
       </div>
       <p class="certificate-code">Código de verificação: <strong>${escapeHtml(cert.code)}</strong></p>
     </article>`;
