@@ -9,7 +9,7 @@ export async function initSetPasswordPage() {
   const token = new URLSearchParams(window.location.search).get('token') || '';
 
   if (!token) {
-    feedback.textContent = 'Link inválido. Peça um novo convite ao administrador.';
+    feedback.textContent = 'Link inválido. Peça um novo acesso pelo Fale Conosco.';
     feedback.dataset.tone = 'error';
     form.hidden = true;
     return;
@@ -37,7 +37,7 @@ export async function initSetPasswordPage() {
     } catch (error) {
       feedback.dataset.tone = 'error';
       if (error instanceof ApiError && error.code === 'PASSWORD_SET_INVALID') {
-        feedback.textContent = 'Este link expirou ou já foi usado. Peça um novo convite.';
+        feedback.textContent = 'Este link expirou ou já foi usado. Peça um novo acesso pelo Fale Conosco.';
       } else if (error instanceof ApiError && error.code === 'PASSWORD_TOO_SHORT') {
         feedback.textContent = 'A senha precisa ter entre 8 e 200 caracteres.';
       } else {

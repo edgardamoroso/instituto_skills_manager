@@ -3,6 +3,7 @@ import { db } from '../db/index.js';
 import { hashPassword } from '../lib/password.js';
 import { conflict, notFound, badRequest } from '../lib/errors.js';
 import { str, email as validateEmail, optionalStr } from '../lib/validate.js';
+import { issuePasswordSet } from './authService.js';
 
 const listStmt = db.prepare(
   `SELECT u.id, u.name, u.email, u.phone, u.address, u.created_at,
@@ -71,6 +72,7 @@ export function createStudent(input) {
   const provided = input?.password ? assertPassword(input.password) : '';
   const temporaryPassword = provided || randomPassword();
   insertStmt.run({ id, ...data, password_hash: hashPassword(temporaryPassword) });
+  issuePasswordSet({ id, name: data.name, email: data.email }, { kind: 'student' });
   return { ...getStudent(id), temporaryPassword };
 }
 

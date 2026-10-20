@@ -55,13 +55,28 @@ function issueVerification(user) {
   });
 }
 
-// Convite para o autor definir a própria senha (reaproveita email_tokens).
-export function issuePasswordSet(user) {
+// Convite para definir a própria senha (reaproveita email_tokens). Usado no
+// cadastro de autores e no e-mail de boas-vindas do aluno cadastrado pelo admin.
+// A senha nunca vai no e-mail: só o link de uso único.
+export function issuePasswordSet(user, { kind = 'author' } = {}) {
   deletePasswordSetTokensForUser.run(user.id);
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 72 * 3600 * 1000).toISOString();
   insertEmailToken.run(token, user.id, 'set_password', expiresAt);
   const link = `${config.publicUrl}/definir-senha.html?token=${token}`;
+  if (kind === 'student') {
+    sendMail({
+      to: user.email,
+      subject: 'Bem-vindo(a) ao Instituto Skills Manager',
+      text: `Olá, ${user.name}.\n\nSua conta de aluno no Instituto Skills Manager foi criada.\n\n`
+        + `Seu login é este e-mail: ${user.email}\n\n`
+        + `Para começar, crie sua senha neste link:\n${link}\n\n`
+        + `O link expira em 72 horas. Depois disso, entre em ${config.publicUrl}/login.html `
+        + 'com a senha informada pela nossa equipe ou peça um novo acesso pelo Fale Conosco.\n\n'
+        + 'Bons estudos!',
+    });
+    return;
+  }
   sendMail({
     to: user.email,
     subject: 'Defina sua senha — Instituto Skills Manager',

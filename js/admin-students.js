@@ -75,7 +75,7 @@ export async function initAdminStudents() {
         showFeedback('Aluno atualizado.');
       } else {
         const created = await api.createStudent(payload);
-        showFeedback(`Aluno criado. Senha de acesso: ${created.temporaryPassword}`);
+        showFeedback(`Aluno criado. Enviamos um e-mail de boas-vindas para ${created.email} com o link para criar a senha. Senha provisória (caso precise): ${created.temporaryPassword}`);
       }
       resetForm();
       await reload();

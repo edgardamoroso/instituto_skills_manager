@@ -1,8 +1,9 @@
 import '../helpers/harness.js';
 import { startApp, createClient, removeDbFile } from '../helpers/harness.js';
-import { loginAsAdmin } from '../helpers/auth.js';
+import { loginAsAdmin, tokenFromEmail } from '../helpers/auth.js';
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { sentMessages, clearOutbox } from '../../src/lib/mailer.js';
 
 let server;
 let admin;
@@ -25,6 +26,37 @@ test('cria aluno com senha gerada e depois com senha informada', async () => {
 
   const manual = await admin.post('/api/students', { body: studentBody({ password: 'definida-1234' }) });
   assert.equal(manual.body.temporaryPassword, 'definida-1234');
+});
+
+test('aluno cadastrado pelo admin recebe boas-vindas com link para criar a senha', async () => {
+  // Given a outbox vazia
+  clearOutbox();
+  const body = studentBody({ name: 'Maria' });
+
+  // When o admin cadastra o aluno
+  const created = await admin.post('/api/students', { body });
+
+  // Then sai um e-mail de boas-vindas, sem a senha, com o link de definir senha
+  assert.equal(created.status, 201);
+  assert.equal(sentMessages.length, 1);
+  const message = sentMessages[0];
+  assert.equal(message.to, body.email);
+  assert.match(message.subject, /Bem-vindo/);
+  assert.match(message.text, /Olá, Maria/);
+  assert.match(message.text, /definir-senha\.html\?token=/);
+  assert.ok(!message.text.includes(created.body.temporaryPassword), 'a senha não pode ir no e-mail');
+
+  // And o link funciona: o aluno cria a senha e entra logado como aluno
+  const studentClient = createClient(server.baseUrl);
+  const set = await studentClient.post('/api/auth/set-password', {
+    body: { token: tokenFromEmail(message), password: 'minha-senha-1' },
+  });
+  assert.equal(set.status, 200);
+  assert.equal(set.body.user.role, 'student');
+  const login = await createClient(server.baseUrl).post('/api/auth/login', {
+    body: { email: body.email, password: 'minha-senha-1' },
+  });
+  assert.equal(login.status, 200);
 });
 
 test('e-mail duplicado → 409 EMAIL_IN_USE', async () => {
