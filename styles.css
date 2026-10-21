@@ -1209,3 +1209,114 @@ legend {
 [data-guest-only][hidden] {
   display: none;
 }
+
+/* ---- Status do curso e turmas ---- */
+.badge.status-em_edicao,
+.status-notice.status-em_edicao {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.status-em_atualizacao,
+.status-notice.status-em_atualizacao {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge.status-liberado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-notice {
+  display: inline-block;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: var(--text);
+}
+
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 0.6rem;
+}
+
+.class-list h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.class-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.class-card h3 {
+  margin: 0 0 0.2rem;
+}
+
+.class-card p {
+  margin: 0.15rem 0;
+  color: var(--muted);
+}
+
+.class-seats {
+  font-weight: 700;
+}
+
+.my-class {
+  padding: 1rem 1.2rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  background: #eff6ff;
+}
+
+.my-class h3 {
+  margin: 0 0 0.3rem;
+}
+
+.badge.class-status-em_formacao {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.class-status-em_andamento {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge.class-status-finalizada {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+.roster-box {
+  margin-top: 0.8rem;
+  overflow-x: auto;
+}
+
+.roster {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.roster th,
+.roster td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.class-change {
+  margin: 0.6rem 0;
+}

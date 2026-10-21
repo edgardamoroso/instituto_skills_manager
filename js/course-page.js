@@ -1,6 +1,6 @@
 import { api, ApiError } from './api.js';
 import { currentUser } from './session.js';
-import { formatBRL, courseTypeLabel, escapeHtml, safeUrl, renderDescriptionHtml } from './format.js';
+import { formatBRL, courseStatusLabel, classPeriod, escapeHtml, safeUrl, renderDescriptionHtml } from './format.js';
 
 function resourceLabel(type) {
   return { video: 'vídeo', pdf: 'PDF', link: 'link externo', file: 'arquivo' }[type] || 'recurso';
@@ -78,14 +78,32 @@ function progressMarkup(data) {
     </div>`;
 }
 
+// Turma do aluno (cursos síncronos): datas, horário e o link/local da aula.
+function myClassMarkup(klass) {
+  if (!klass) return '';
+  const isLink = /^https?:\/\//i.test(klass.location || '');
+  let where = '<p>O link ou local da aula será informado em breve.</p>';
+  if (isLink) {
+    where = `<a class="btn btn-primary" href="${escapeHtml(safeUrl(klass.location))}" target="_blank" rel="noopener noreferrer">Entrar na aula ao vivo ↗</a>`;
+  } else if (klass.location) {
+    where = `<p><strong>Local:</strong> ${escapeHtml(klass.location)}</p>`;
+  }
+  return `
+    <div class="my-class">
+      <h3>Sua turma: ${escapeHtml(klass.name)}</h3>
+      <p>${[classPeriod(klass), klass.schedule].filter(Boolean).map(escapeHtml).join(' · ')}</p>
+      ${where}
+    </div>`;
+}
+
 function renderLessonList(container, data) {
   const lessons = data.lessons || [];
   const note = data.preview
     ? '<p class="panel-note">Prévia de quem edita o curso: todas as aulas aparecem liberadas. O aluno libera uma de cada vez, abrindo a anterior.</p>'
     : '';
   container.innerHTML = lessons.length
-    ? note + progressMarkup(data) + lessons.map((lesson, index) => lessonMarkup(lesson, index, data.preview)).join('')
-    : '<p class="empty-state">Este curso ainda não possui aulas publicadas.</p>';
+    ? note + myClassMarkup(data.class) + progressMarkup(data) + lessons.map((lesson, index) => lessonMarkup(lesson, index, data.preview)).join('')
+    : myClassMarkup(data.class) + '<p class="empty-state">Este curso ainda não possui aulas publicadas.</p>';
   // Largura da barra via CSSOM: o CSP do site bloqueia style="" no HTML.
   container.querySelectorAll('.progress-fill').forEach((bar) => { bar.style.width = `${bar.dataset.percent}%`; });
 }
@@ -99,7 +117,7 @@ function contentNotice(title, text, actionHtml = '') {
     </div>`;
 }
 
-async function renderContent(courseId, container) {
+async function renderContent(courseId, container, course) {
   const user = await currentUser();
   if (!user) {
     container.innerHTML = contentNotice(
@@ -145,10 +163,15 @@ async function renderContent(courseId, container) {
       return;
     }
     if (error.code === 'ENROLLMENT_NOT_FOUND') {
+      const open = course?.status === 'liberado';
+      let text = 'As inscrições deste curso ainda não estão abertas.';
+      if (open) text = course.type === 'online'
+        ? 'Inscreva-se numa turma (acima) para liberar o acesso.'
+        : 'Solicite sua matrícula neste curso para liberar o acesso às aulas.';
       container.innerHTML = contentNotice(
         'Você ainda não está matriculado',
-        'Solicite sua matrícula neste curso para liberar o acesso às aulas.',
-        `<a class="btn btn-primary" href="inscricao.html?courseId=${courseId}">Solicitar matrícula</a>`,
+        text,
+        open && course.type !== 'online' ? `<a class="btn btn-primary" href="inscricao.html?courseId=${courseId}">Solicitar matrícula</a>` : '',
       );
     } else if (error.code === 'ENROLLMENT_INACTIVE') {
       container.innerHTML = contentNotice(
@@ -164,6 +187,49 @@ async function renderContent(courseId, container) {
       container.innerHTML = '<p class="empty-state">Não foi possível carregar o conteúdo agora.</p>';
     }
   }
+}
+
+function seatsText(klass) {
+  if (klass.seatsLeft == null) return 'Vagas abertas';
+  if (klass.seatsLeft === 0) return 'Turma lotada';
+  return `${klass.seatsLeft} ${klass.seatsLeft === 1 ? 'vaga' : 'vagas'}`;
+}
+
+// Inscrição conforme o status: em edição/atualização só avisam; liberado
+// assíncrono → solicitar matrícula; liberado síncrono → escolher uma turma aberta.
+function enrollMarkup(course, classes) {
+  if (course.status === 'em_edicao') {
+    return `<p class="status-notice status-em_edicao">🛠 <strong>${courseStatusLabel(course.status)}</strong> — em breve abriremos as inscrições.</p>`;
+  }
+  if (course.status === 'em_atualizacao') {
+    return `<p class="status-notice status-em_atualizacao">🔄 <strong>${courseStatusLabel(course.status)}</strong> — inscrições temporariamente fechadas. Quem já está matriculado continua com acesso.</p>`;
+  }
+  if (course.type !== 'online') {
+    return `<a class="btn btn-primary" href="inscricao.html?courseId=${encodeURIComponent(course.id)}">Solicitar matrícula</a>`;
+  }
+  if (!classes.length) {
+    return '<p class="status-notice">Nenhuma turma com inscrições abertas no momento. Aguarde a próxima turma.</p>';
+  }
+  const cards = classes.map((klass) => {
+    const info = [classPeriod(klass), klass.schedule].filter(Boolean).map(escapeHtml).join(' · ') || 'Datas a definir';
+    const action = klass.open
+      ? `<a class="btn btn-primary" href="inscricao.html?courseId=${encodeURIComponent(course.id)}&classId=${encodeURIComponent(klass.id)}">Inscrever-se nesta turma</a>`
+      : '<span class="badge">Lotada</span>';
+    return `
+        <article class="class-card">
+          <div>
+            <h3>${escapeHtml(klass.name)}</h3>
+            <p>${info}</p>
+            <p class="class-seats">${seatsText(klass)}</p>
+          </div>
+          ${action}
+        </article>`;
+  }).join('');
+  return `
+    <div class="class-list" id="turmas">
+      <h2>Turmas em formação</h2>
+      ${cards}
+    </div>`;
 }
 
 export async function initCoursePage() {
@@ -184,6 +250,9 @@ export async function initCoursePage() {
     return;
   }
 
+  const classes = course.type === 'online' && course.status === 'liberado'
+    ? await api.courseClasses(course.id).catch(() => [])
+    : [];
   const backHref = course.type === 'gravado' ? 'cursos-gravados.html' : 'cursos-online.html';
   root.innerHTML = `
     <section class="course-heading">
@@ -197,7 +266,7 @@ export async function initCoursePage() {
         <span>💸 ${formatBRL(course.priceCents)}</span>
         <span>▣ ${(course.lessons || []).length} aulas</span>
       </div>
-      <a class="btn btn-primary" href="inscricao.html?courseId=${encodeURIComponent(course.id)}">Solicitar matrícula</a>
+      <div id="course-enroll">${enrollMarkup(course, classes)}</div>
     </section>
     <section class="course-content">
       <div class="section-header">
@@ -208,5 +277,5 @@ export async function initCoursePage() {
     </section>`;
 
   document.title = `${course.title} | Instituto Skills Manager`;
-  await renderContent(course.id, document.getElementById('course-content-body'));
+  await renderContent(course.id, document.getElementById('course-content-body'), course);
 }

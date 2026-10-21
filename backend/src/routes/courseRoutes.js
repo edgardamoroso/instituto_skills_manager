@@ -18,11 +18,12 @@ import {
   updateCourse,
   updateLesson,
 } from '../services/courseService.js';
-import { requireAuth, requireCourseEditor } from '../middleware/auth.js';
+import { requireAdmin, requireAuth, requireCourseEditor } from '../middleware/auth.js';
 import { badRequest } from '../lib/errors.js';
 import { httpUrl, oneOf, str } from '../lib/validate.js';
 import { audit } from '../lib/audit.js';
 import { removeLessonFile, saveLessonFile } from '../lib/lessonFiles.js';
+import { classRoster, createClass, deleteClass, listClasses, updateClass } from '../services/classService.js';
 import { wrap } from '../lib/http.js';
 
 const router = Router();
@@ -168,6 +169,34 @@ router.get('/:courseId/lessons/:lessonId/file', requireAuth, wrap((request, resp
 // Aluno abriu a aula: registra o progresso e libera a próxima.
 router.post('/:courseId/lessons/:lessonId/open', requireAuth, wrap((request, response) => {
   response.json(openLesson(request.params.courseId, request.params.lessonId, request.user));
+}));
+
+// Turmas (cursos síncronos). Público vê as em formação; quem edita, todas.
+router.get('/:courseId/classes', wrap((request, response) => {
+  response.json(listClasses(request.params.courseId, request.user));
+}));
+
+router.post('/:courseId/classes', requireCourseEditor, wrap((request, response) => {
+  const created = createClass(request.params.courseId, request.body || {}, request.user);
+  audit('class.create', { request, target: created.id, detail: created.name });
+  response.status(201).json(created);
+}));
+
+router.patch('/:courseId/classes/:classId', requireCourseEditor, wrap((request, response) => {
+  const updated = updateClass(request.params.courseId, request.params.classId, request.body || {}, request.user);
+  audit('class.update', { request, target: updated.id, detail: updated.status });
+  response.json(updated);
+}));
+
+router.delete('/:courseId/classes/:classId', requireCourseEditor, wrap((request, response) => {
+  deleteClass(request.params.courseId, request.params.classId, request.user);
+  audit('class.delete', { request, target: request.params.classId });
+  response.status(204).end();
+}));
+
+// Inscritos da turma: dados de alunos, só admin.
+router.get('/:courseId/classes/:classId/students', requireAdmin, wrap((request, response) => {
+  response.json(classRoster(request.params.courseId, request.params.classId));
 }));
 
 router.delete('/:courseId/lessons/:lessonId', requireCourseEditor, wrap((request, response) => {

@@ -8,19 +8,23 @@ import { str, optionalStr, oneOf } from '../lib/validate.js';
 import { sanitizeDescriptionHtml } from '../lib/richText.js';
 import { parseVideoLink, embedUrlFor } from './videoService.js';
 import { certificateFor, courseProgress } from './certificateService.js';
+import { classToApi, getClass } from './classService.js';
+
+export const COURSE_STATUSES = ['em_edicao', 'em_atualizacao', 'liberado'];
 
 const listCoursesStmt = db.prepare('SELECT * FROM courses ORDER BY created_at DESC, title ASC');
+const enrollmentOfStmt = db.prepare('SELECT id, class_id FROM enrollments WHERE user_id = ? AND course_id = ?');
 const listCoursesByAuthorStmt = db.prepare('SELECT * FROM courses WHERE author_id = ? ORDER BY created_at DESC, title ASC');
 const getCourseStmt = db.prepare('SELECT * FROM courses WHERE id = ?');
 const getAuthorStmt = db.prepare("SELECT id, name, bio FROM users WHERE id = ? AND role = 'author'");
 const listLessonsStmt = db.prepare('SELECT * FROM lessons WHERE course_id = ? ORDER BY position ASC, rowid ASC');
 const insertCourseStmt = db.prepare(
-  `INSERT INTO courses (id, title, type, description, duration, price_cents, author_id)
-   VALUES (@id, @title, @type, @description, @duration, @price_cents, @author_id)`,
+  `INSERT INTO courses (id, title, type, description, duration, price_cents, author_id, status)
+   VALUES (@id, @title, @type, @description, @duration, @price_cents, @author_id, @status)`,
 );
 const updateCourseStmt = db.prepare(
   `UPDATE courses SET title = @title, type = @type, description = @description,
-   duration = @duration, price_cents = @price_cents, author_id = @author_id WHERE id = @id`,
+   duration = @duration, price_cents = @price_cents, author_id = @author_id, status = @status WHERE id = @id`,
 );
 const deleteCourseStmt = db.prepare('DELETE FROM courses WHERE id = ?');
 const insertLessonStmt = db.prepare(
@@ -96,6 +100,7 @@ function courseToApi(row, { withLessons = false, withResources = false } = {}) {
     duration: row.duration,
     priceCents: row.price_cents,
     author: authorToApi(row.author_id),
+    status: row.status,
   };
   if (withLessons) {
     course.lessons = listLessonsStmt.all(row.id).map((lesson) => lessonToApi(lesson, { withResource: withResources }));
@@ -103,6 +108,12 @@ function courseToApi(row, { withLessons = false, withResources = false } = {}) {
     course.lessonCount = listLessonsStmt.all(row.id).length;
   }
   return course;
+}
+
+// Status: o informado; sem informar, mantém o atual (edição) ou "em edição" (novo curso).
+function resolveStatus(input, currentStatus) {
+  if (input.status === undefined || input.status === '') return currentStatus || 'em_edicao';
+  return oneOf(input.status, COURSE_STATUSES, { code: 'COURSE_STATUS_INVALID' });
 }
 
 function normalizeCourseInput(input = {}) {
@@ -140,6 +151,7 @@ function assertCourseOwnership(courseRow, actor) {
   if (!canEditCourse(courseRow, actor)) throw forbidden('COURSE_FORBIDDEN');
 }
 
+// Todos os status aparecem no site; só "liberado" aceita inscrição (enrollmentService).
 export function getCourses() {
   return listCoursesStmt.all().map((row) => courseToApi(row));
 }
@@ -157,7 +169,7 @@ export function getCourse(courseId, viewer = null) {
 export function createCourse(input, actor) {
   const data = normalizeCourseInput(input);
   const id = crypto.randomUUID();
-  insertCourseStmt.run({ id, ...data, author_id: resolveAuthorId(input, actor, null) });
+  insertCourseStmt.run({ id, ...data, author_id: resolveAuthorId(input, actor, null), status: resolveStatus(input, null) });
   return getCourse(id, actor);
 }
 
@@ -166,7 +178,7 @@ export function updateCourse(courseId, input, actor) {
   if (!row) throw notFound('COURSE_NOT_FOUND');
   assertCourseOwnership(row, actor);
   const data = normalizeCourseInput(input);
-  updateCourseStmt.run({ id: courseId, ...data, author_id: resolveAuthorId(input, actor, row.author_id) });
+  updateCourseStmt.run({ id: courseId, ...data, author_id: resolveAuthorId(input, actor, row.author_id), status: resolveStatus(input, row.status) });
   return getCourse(courseId, actor);
 }
 
@@ -286,6 +298,12 @@ function lessonsWithProgress(courseId, user, preview) {
   });
 }
 
+// Turma do aluno no curso, com link/local (só para quem está nela).
+function myClass(userId, courseId) {
+  const row = getClass(enrollmentOfStmt.get(userId, courseId)?.class_id);
+  return row ? classToApi(row, { withLocation: true }) : null;
+}
+
 // Conteúdo protegido. Aulas bloqueadas vão sem o endereço do recurso.
 export function getCourseContent(courseId, user) {
   const row = getCourseStmt.get(courseId);
@@ -296,6 +314,7 @@ export function getCourseContent(courseId, user) {
     preview,
     progress: preview ? null : courseProgress(user.id, courseId),
     certificate: preview ? null : certificateFor(user.id, courseId),
+    class: preview ? null : myClass(user.id, courseId),
     lessons: lessonsWithProgress(courseId, user, preview).map(({ lesson, unlocked, opened }) => ({
       ...lessonToApi(lesson, { withResource: unlocked, forStudent: !preview }),
       locked: !unlocked,

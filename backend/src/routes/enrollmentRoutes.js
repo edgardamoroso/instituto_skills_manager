@@ -7,6 +7,7 @@ import {
   listEnrollmentsByUser,
   regeneratePlan,
   requestEnrollment,
+  setEnrollmentClass,
   setEnrollmentStatus,
 } from '../services/enrollmentService.js';
 import { listPaymentsByEnrollment, setPaymentPaid } from '../services/paymentService.js';
@@ -26,8 +27,8 @@ router.get('/mine', requireAuth, wrap((request, response) => {
 
 router.post('/request', requireAuth, requestLimiter, wrap((request, response) => {
   const courseId = str(request.body?.courseId, { code: 'COURSE_ID_REQUIRED', min: 1, max: 100 });
-  const result = requestEnrollment(request.user.id, courseId);
-  audit('enrollment.request', { request, target: courseId });
+  const result = requestEnrollment(request.user.id, courseId, request.body?.classId || null);
+  audit('enrollment.request', { request, target: courseId, detail: result.classId || '' });
   response.status(201).json(result);
 }));
 
@@ -53,6 +54,12 @@ router.patch('/:enrollmentId', requireAdmin, wrap((request, response) => {
     request.body?.statusReason,
   );
   audit('enrollment.set_status', { request, target: enrollment.id, detail: `${enrollment.status} — ${enrollment.statusReason}` });
+  response.json(enrollment);
+}));
+
+router.put('/:enrollmentId/class', requireAdmin, wrap((request, response) => {
+  const enrollment = setEnrollmentClass(request.params.enrollmentId, request.body?.classId || null);
+  audit('enrollment.set_class', { request, target: enrollment.id, detail: enrollment.classId || 'sem turma' });
   response.json(enrollment);
 }));
 

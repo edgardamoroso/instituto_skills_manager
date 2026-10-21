@@ -13,6 +13,25 @@ export function courseTypeLabel(type) {
   return type === 'gravado' ? 'Assíncrono' : 'Síncrono';
 }
 
+export const COURSE_STATUS_LABELS = { em_edicao: 'Em edição', em_atualizacao: 'Em atualização', liberado: 'Liberado' };
+export const CLASS_STATUS_LABELS = { em_formacao: 'Turma em formação', em_andamento: 'Turma em andamento', finalizada: 'Turma finalizada' };
+
+export function courseStatusLabel(status) {
+  return COURSE_STATUS_LABELS[status] || 'Em edição';
+}
+
+export function classStatusLabel(status) {
+  return CLASS_STATUS_LABELS[status] || status;
+}
+
+// "03/11/2026 a 10/12/2026" (ou só uma das datas; vazio sem datas).
+export function classPeriod(klass) {
+  if (klass?.startDate && klass?.endDate) return `${formatDate(klass.startDate)} a ${formatDate(klass.endDate)}`;
+  if (klass?.startDate) return `Início em ${formatDate(klass.startDate)}`;
+  if (klass?.endDate) return `Até ${formatDate(klass.endDate)}`;
+  return '';
+}
+
 export function ebookModeLabel(mode) {
   return mode === 'link_externo' ? 'Loja externa' : 'Venda no site';
 }

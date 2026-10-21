@@ -76,6 +76,22 @@ if (!columnExists('courses', 'author_id')) {
 }
 db.exec('CREATE INDEX IF NOT EXISTS idx_courses_author ON courses(author_id)');
 
+// 7) Status do curso (em edição / em atualização / liberado). Em bancos antigos,
+//    assíncronos com aulas ficam liberados; os demais (sem aulas e síncronos),
+//    em edição até o admin liberar.
+if (!columnExists('courses', 'status')) {
+  db.exec(`ALTER TABLE courses ADD COLUMN status TEXT NOT NULL DEFAULT 'em_edicao'
+    CHECK (status IN ('em_edicao', 'em_atualizacao', 'liberado'))`);
+  db.exec(`UPDATE courses SET status = 'liberado'
+    WHERE type = 'gravado' AND EXISTS (SELECT 1 FROM lessons l WHERE l.course_id = courses.id)`);
+}
+
+// 8) Turma da matrícula (cursos síncronos).
+if (!columnExists('enrollments', 'class_id')) {
+  db.exec('ALTER TABLE enrollments ADD COLUMN class_id TEXT REFERENCES course_classes(id) ON DELETE SET NULL');
+}
+db.exec('CREATE INDEX IF NOT EXISTS idx_enrollments_class ON enrollments(class_id)');
+
 // 4) Descrições de curso gravadas antes do editor rico não passaram pela sanitização
 //    e a página do curso renderiza como HTML qualquer descrição que contenha tag.
 //    Sanitiza essas linhas; texto puro fica intacto (o frontend já o escapa).

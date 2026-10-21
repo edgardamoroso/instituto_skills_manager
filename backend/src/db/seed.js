@@ -43,8 +43,8 @@ const ADMIN_PASSWORD = config.adminPassword;
 
 export function seedDatabase(db) {
   const insertCourse = db.prepare(
-    `INSERT INTO courses (id, title, type, description, duration, price_cents)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO courses (id, title, type, description, duration, price_cents, status)
+     VALUES (?, ?, ?, ?, ?, ?, 'liberado')`,
   );
   for (const course of initialCourses) {
     insertCourse.run(course.id, course.title, course.type, course.description, course.duration, toCents(course.price));

@@ -1,6 +1,6 @@
 import { api, ApiError } from './api.js';
 import { guardCourseEditor } from './session.js';
-import { formatBRL, courseTypeLabel, escapeHtml, descriptionExcerpt } from './format.js';
+import { formatBRL, courseTypeLabel, courseStatusLabel, escapeHtml, descriptionExcerpt } from './format.js';
 
 const HAS_HTML_TAG = /<[a-z][\s\S]*>/i;
 
@@ -59,8 +59,7 @@ export async function initAdminCourses() {
   if (!user) return;
 
   const isAuthor = user.role === 'author';
-  const mineOnly = document.body.dataset.page === 'my-courses' || isAuthor;
-  const loadCourses = () => (mineOnly ? api.coursesMine() : api.courses());
+  const loadCourses = () => api.coursesMine(); // admin: todos; autor: os seus
 
   const formTitle = document.getElementById('form-title');
   const courseIdInput = document.getElementById('course-id');
@@ -108,6 +107,7 @@ export async function initAdminCourses() {
             <strong>${escapeHtml(course.title)}</strong>
             <p>${escapeHtml(descriptionExcerpt(course.description))}</p>
             <span class="badge">${courseTypeLabel(course.type)}</span>
+            <span class="badge status-${course.status}">${courseStatusLabel(course.status)}</span>
             <span class="badge">${formatBRL(course.priceCents)}</span>
             ${course.author ? `<span class="badge">Autor: ${escapeHtml(course.author.name)}</span>` : ''}
             <span class="lesson-summary">${course.lessonCount} ${course.lessonCount === 1 ? 'aula cadastrada' : 'aulas cadastradas'}</span>
@@ -135,6 +135,7 @@ export async function initAdminCourses() {
       description: getDescriptionFromEditor(descriptionEditor),
       duration: data.get('duration'),
       price: data.get('price'),
+      status: data.get('status'),
     };
     if (authorSelect) payload.authorId = data.get('authorId') || '';
     try {
@@ -167,6 +168,7 @@ export async function initAdminCourses() {
       courseIdInput.value = id;
       document.getElementById('title').value = full.title;
       document.getElementById('type').value = full.type;
+      document.getElementById('course-status').value = full.status || 'em_edicao';
       setDescriptionEditor(descriptionEditor, full.description);
       document.getElementById('duration').value = full.duration;
       document.getElementById('price').value = formatBRL(full.priceCents);

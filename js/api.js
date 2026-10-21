@@ -100,7 +100,7 @@ export const api = {
   // matrículas
   enrollmentsByCourse: (courseId) => request(`/enrollments?courseId=${encodeURIComponent(courseId)}`),
   myEnrollments: () => request('/enrollments/mine'),
-  requestEnrollment: (courseId) => request('/enrollments/request', { method: 'POST', body: { courseId } }),
+  requestEnrollment: (courseId, classId) => request('/enrollments/request', { method: 'POST', body: { courseId, ...(classId ? { classId } : {}) } }),
   enrollment: (id) => request(`/enrollments/${id}`),
   createEnrollment: (body) => request('/enrollments', { method: 'POST', body }),
   setEnrollmentStatus: (id, body) => request(`/enrollments/${id}`, { method: 'PATCH', body }),
@@ -118,6 +118,14 @@ export const api = {
   createVideo: (body) => request('/videos', { method: 'POST', body }),
   updateVideo: (id, body) => request(`/videos/${id}`, { method: 'PATCH', body }),
   deleteVideo: (id) => request(`/videos/${id}`, { method: 'DELETE' }),
+
+  // turmas (cursos síncronos)
+  courseClasses: (id) => request(`/courses/${id}/classes`),
+  createClass: (id, body) => request(`/courses/${id}/classes`, { method: 'POST', body }),
+  updateClass: (id, classId, body) => request(`/courses/${id}/classes/${classId}`, { method: 'PATCH', body }),
+  deleteClass: (id, classId) => request(`/courses/${id}/classes/${classId}`, { method: 'DELETE' }),
+  classStudents: (id, classId) => request(`/courses/${id}/classes/${classId}/students`),
+  setEnrollmentClass: (enrollmentId, classId) => request(`/enrollments/${enrollmentId}/class`, { method: 'PUT', body: { classId } }),
 
   // certificados
   issueCertificate: (courseId) => request('/certificates', { method: 'POST', body: { courseId } }),

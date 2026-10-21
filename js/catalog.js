@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { formatBRL, courseTypeLabel, escapeHtml, descriptionExcerpt } from './format.js';
+import { formatBRL, courseTypeLabel, courseStatusLabel, escapeHtml, descriptionExcerpt } from './format.js';
 
 function courseCard(course) {
   return `
@@ -8,6 +8,7 @@ function courseCard(course) {
         <h3>${escapeHtml(course.title)}</h3>
         <span class="type-pill">${courseTypeLabel(course.type)}</span>
       </div>
+      ${course.status !== 'liberado' ? `<span class="badge status-${course.status}">${courseStatusLabel(course.status)}</span>` : ''}
       <p>${escapeHtml(descriptionExcerpt(course.description))}</p>
       <div class="meta">
         <span>⏱ ${escapeHtml(course.duration)}</span>
@@ -31,7 +32,8 @@ export async function initCatalog(page) {
 
   let courses = [];
   try {
-    courses = await api.courses();
+    // Liberados primeiro (a página inicial mostra só os 4 primeiros).
+    courses = (await api.courses()).sort((a, b) => (a.status === 'liberado' ? 0 : 1) - (b.status === 'liberado' ? 0 : 1));
   } catch {
     fill(home || recorded || online, [], 'Não foi possível carregar os cursos agora.');
     return;

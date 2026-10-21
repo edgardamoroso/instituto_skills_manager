@@ -58,6 +58,10 @@
           <select id="enroll-student" name="userId" required></select>
           <label for="enroll-course">Curso</label>
           <select id="enroll-course" name="courseId" required></select>
+          <div id="enroll-class-group" hidden>
+            <label for="enroll-class">Turma</label>
+            <select id="enroll-class" name="classId"></select>
+          </div>
           <div class="lesson-fields">
             <div>
               <label for="enroll-installments">Nº de parcelas</label>
@@ -80,10 +84,14 @@
           </div>
           <label for="course-filter">Curso</label>
           <select id="course-filter"></select>
+          <div id="class-filter-group" hidden>
+            <label for="class-filter">Turma</label>
+            <select id="class-filter"></select>
+          </div>
           <div class="table-scroll">
             <table class="data-table" id="enrollment-table">
               <thead>
-                <tr><th>Aluno</th><th>Status</th><th>Parcelas</th><th>Em atraso</th><th>Ações</th></tr>
+                <tr><th>Aluno</th><th>Turma</th><th>Status</th><th>Parcelas</th><th>Em atraso</th><th>Ações</th></tr>
               </thead>
               <tbody></tbody>
             </table>

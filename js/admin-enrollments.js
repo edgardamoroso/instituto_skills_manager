@@ -1,6 +1,6 @@
 import { api, ApiError } from './api.js';
 import { guardAdmin } from './session.js';
-import { formatBRL, formatDate, courseTypeLabel, paymentStatusLabel, escapeHtml } from './format.js';
+import { formatBRL, formatDate, courseTypeLabel, paymentStatusLabel, escapeHtml, classStatusLabel, classPeriod } from './format.js';
 
 function toCents(value) {
   if (value == null || value === '') return NaN;
@@ -17,6 +17,14 @@ const createEnrollmentErrors = {
   FIRST_DUE_DATE_INVALID: 'Informe a data do primeiro vencimento.',
   STUDENT_NOT_FOUND: 'Aluno não encontrado.',
   COURSE_NOT_FOUND: 'Curso não encontrado.',
+  CLASS_FULL: 'A turma escolhida está lotada. Aumente as vagas da turma ou escolha outra.',
+  CLASS_CLOSED: 'A turma escolhida está finalizada.',
+  CLASS_INVALID: 'Turma inválida para este curso.',
+};
+
+const classLabel = (klass) => {
+  const seats = klass.capacity == null ? `${klass.enrolled} inscritos` : `${klass.enrolled}/${klass.capacity} vagas`;
+  return `${klass.name} · ${classStatusLabel(klass.status)} · ${seats}`;
 };
 
 export async function initEnrollmentsPage() {
@@ -33,6 +41,11 @@ export async function initEnrollmentsPage() {
   const courseFilter = document.getElementById('course-filter');
   const enrollmentTableBody = document.querySelector('#enrollment-table tbody');
   const detail = document.getElementById('enrollment-detail');
+  const classGroup = document.getElementById('enroll-class-group');
+  const classSelect = document.getElementById('enroll-class');
+  const classFilterGroup = document.getElementById('class-filter-group');
+  const classFilter = document.getElementById('class-filter');
+  let filterClasses = [];
 
   let courses = [];
   let students = [];
@@ -74,11 +87,13 @@ export async function initEnrollmentsPage() {
 
   function renderEnrollmentRows(rows) {
     currentRows = rows;
-    if (!rows.length) {
-      enrollmentTableBody.innerHTML = '<tr><td colspan="5" class="empty-cell">Nenhuma matrícula neste curso.</td></tr>';
+    const wanted = classFilter.value;
+    const visible = !wanted ? rows : rows.filter((row) => (wanted === 'none' ? !row.classId : row.classId === wanted));
+    if (!visible.length) {
+      enrollmentTableBody.innerHTML = `<tr><td colspan="6" class="empty-cell">${rows.length ? 'Nenhuma matrícula nesta turma.' : 'Nenhuma matrícula neste curso.'}</td></tr>`;
       return;
     }
-    enrollmentTableBody.innerHTML = rows.map((row) => {
+    enrollmentTableBody.innerHTML = visible.map((row) => {
       const paid = row.payment.paidCount;
       const total = row.payment.total;
       return `
@@ -87,6 +102,7 @@ export async function initEnrollmentsPage() {
           <strong>${escapeHtml(row.student.name)}</strong>
           <div class="muted-line">${escapeHtml(row.student.email)}</div>
         </td>
+        <td>${row.class ? escapeHtml(row.class.name) : '<span class="muted-line">—</span>'}</td>
         <td>
           <span class="pill-status status-${row.status}">${row.status === 'ativa' ? 'Ativa' : 'Inativa'}</span>
           ${row.delinquent ? '<span class="pill-status parcela-atrasada">Inadimplente</span>' : ''}
@@ -103,13 +119,40 @@ export async function initEnrollmentsPage() {
     }).join('');
   }
 
+  // Curso síncrono: filtro por turma (todas, sem turma ou uma turma específica).
+  async function loadClassFilter(courseId) {
+    const course = courses.find((item) => item.id === courseId);
+    const online = course?.type === 'online';
+    classFilterGroup.hidden = !online;
+    filterClasses = online ? await api.courseClasses(courseId).catch(() => []) : [];
+    const previous = classFilter.value;
+    classFilter.innerHTML = '<option value="">Todas as turmas</option><option value="none">Sem turma</option>'
+      + filterClasses.map((klass) => `<option value="${klass.id}">${escapeHtml(classLabel(klass))}</option>`).join('');
+    classFilter.value = filterClasses.some((klass) => klass.id === previous) ? previous : '';
+  }
+
   async function loadCourseEnrollments(courseId) {
     if (!courseId) {
       renderEnrollmentRows([]);
       return;
     }
+    await loadClassFilter(courseId);
     const rows = await api.enrollmentsByCourse(courseId);
     renderEnrollmentRows(rows);
+  }
+
+  // Nova matrícula: turma (opcional para o admin) quando o curso é síncrono.
+  async function loadNewEnrollmentClasses() {
+    const course = courses.find((item) => item.id === courseSelect.value);
+    const online = course?.type === 'online';
+    classGroup.hidden = !online;
+    if (!online) {
+      classSelect.innerHTML = '';
+      return;
+    }
+    const classes = (await api.courseClasses(course.id).catch(() => [])).filter((klass) => klass.status !== 'finalizada');
+    classSelect.innerHTML = '<option value="">Sem turma (definir depois)</option>'
+      + classes.map((klass) => `<option value="${klass.id}" ${klass.seatsLeft === 0 ? 'disabled' : ''}>${escapeHtml(classLabel(klass))}</option>`).join('');
   }
 
   function renderDetail(data) {
@@ -132,6 +175,14 @@ export async function initEnrollmentsPage() {
         ${data.statusReason ? `· ${escapeHtml(data.statusReason)}` : ''}
       </p>
       <p class="panel-note">${escapeHtml(planText)}</p>
+      ${data.course?.type === 'online' ? `
+      <form class="lesson-form class-change" data-class-form>
+        <label>Turma
+          <select name="classId" data-class-select><option value="">Carregando…</option></select>
+        </label>
+        <button class="btn btn-secondary" type="submit">Salvar turma</button>
+        <p class="form-feedback" data-class-feedback role="status"></p>
+      </form>` : ''}
       <p class="panel-note">
         Recebido ${formatBRL(data.payment.paidCents)} de ${formatBRL(data.payment.plannedCents)} ·
         Em atraso ${formatBRL(data.payment.overdueCents)}
@@ -187,6 +238,19 @@ export async function initEnrollmentsPage() {
 
     detail.dataset.enrollmentId = data.id;
     detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    fillDetailClasses(data);
+  }
+
+  async function fillDetailClasses(data) {
+    const select = detail.querySelector('[data-class-select]');
+    if (!select) return;
+    const classes = await api.courseClasses(data.courseId).catch(() => []);
+    select.innerHTML = '<option value="">Sem turma</option>' + classes
+      .filter((klass) => klass.status !== 'finalizada' || klass.id === data.classId)
+      .map((klass) => {
+        const full = klass.seatsLeft === 0 && klass.id !== data.classId;
+        return `<option value="${klass.id}" ${klass.id === data.classId ? 'selected' : ''} ${full ? 'disabled' : ''}>${escapeHtml(classLabel(klass))}${klass.id === data.classId ? ' (atual)' : ''}</option>`;
+      }).join('');
   }
 
   async function openDetail(enrollmentId) {
@@ -226,12 +290,14 @@ export async function initEnrollmentsPage() {
       await api.createEnrollment({
         userId: data.get('userId'),
         courseId: data.get('courseId'),
+        classId: data.get('classId') || null,
         installmentsCount: Number(data.get('installmentsCount')),
         installmentValueCents: cents,
         firstDueDate: data.get('firstDueDate'),
       });
       newForm.reset();
       document.getElementById('enroll-installments').value = '1';
+      await loadNewEnrollmentClasses();
       newFeedback.textContent = 'Matrícula criada com as parcelas geradas.';
       courseFilter.value = data.get('courseId');
       await refreshAll();
@@ -242,7 +308,29 @@ export async function initEnrollmentsPage() {
     }
   });
 
-  courseFilter.addEventListener('change', () => loadCourseEnrollments(courseFilter.value));
+  courseFilter.addEventListener('change', () => {
+    classFilter.value = '';
+    loadCourseEnrollments(courseFilter.value);
+  });
+  classFilter.addEventListener('change', () => renderEnrollmentRows(currentRows));
+  courseSelect.addEventListener('change', loadNewEnrollmentClasses);
+
+  // Troca de turma no detalhe da matrícula.
+  detail.addEventListener('submit', async (event) => {
+    const form = event.target.closest('[data-class-form]');
+    if (!form) return;
+    event.preventDefault();
+    const feedback = form.querySelector('[data-class-feedback]');
+    const enrollmentId = detail.dataset.enrollmentId;
+    try {
+      await api.setEnrollmentClass(enrollmentId, form.querySelector('[data-class-select]').value || null);
+      await refreshAll();
+      await openDetail(enrollmentId);
+      detail.querySelector('[data-class-feedback]').textContent = 'Turma atualizada.';
+    } catch (error) {
+      feedback.textContent = (error instanceof ApiError && createEnrollmentErrors[error.code]) || 'Não foi possível trocar a turma.';
+    }
+  });
 
   enrollmentTableBody.addEventListener('click', async (event) => {
     const open = event.target.closest('[data-open]');

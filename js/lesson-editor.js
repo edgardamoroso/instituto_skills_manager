@@ -1,6 +1,7 @@
 import { api, ApiError } from './api.js';
 import { guardCourseEditor } from './session.js';
-import { escapeHtml } from './format.js';
+import { escapeHtml, courseStatusLabel } from './format.js';
+import { mountClassManager } from './class-manager.js';
 
 /* ------------------------------------------------------------------ */
 /* gerenciar-curso.html — editor de aulas (criar, editar, reordenar)   */
@@ -31,6 +32,7 @@ function editorMarkup(course, backHref) {
     <section class="course-heading">
       <a class="back-link" href="${backHref}">← Voltar</a>
       <span class="type-pill">Editor de conteúdo</span>
+      <span class="badge status-${course.status}">${courseStatusLabel(course.status)}</span>
       <h1>${escapeHtml(course.title)}</h1>
       <p class="course-description">
         Cadastre e organize as aulas. O aluno precisa abrir cada aula para liberar a seguinte,
@@ -38,6 +40,7 @@ function editorMarkup(course, backHref) {
         <a href="curso.html?id=${encodeURIComponent(course.id)}" target="_blank" rel="noopener">Ver como o aluno vê ↗</a>
       </p>
     </section>
+    ${course.type === 'online' ? '<section class="panel section-stack" id="class-manager"></section>' : ''}
     <section class="panel">
       <form id="editor-lesson-form" class="lesson-form" novalidate>
         <h2 id="editor-form-title">Nova aula</h2>
@@ -122,6 +125,8 @@ export async function initCourseEditor() {
   }
 
   root.innerHTML = editorMarkup(course, backHref);
+  const classBox = document.getElementById('class-manager');
+  if (classBox) await mountClassManager(classBox, course, user);
 
   const form = document.getElementById('editor-lesson-form');
   const listNode = document.getElementById('editor-lesson-list');

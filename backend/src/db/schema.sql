@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS courses (
   duration    TEXT NOT NULL DEFAULT '',
   price_cents INTEGER NOT NULL DEFAULT 0,
   author_id   TEXT REFERENCES users(id) ON DELETE SET NULL,
+  -- em_edicao: fora do site · em_atualizacao: no site, sem novas inscrições · liberado
+  status      TEXT NOT NULL DEFAULT 'em_edicao' CHECK (status IN ('em_edicao', 'em_atualizacao', 'liberado')),
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -63,6 +65,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
   installments_count      INTEGER NOT NULL DEFAULT 0,
   installment_value_cents INTEGER NOT NULL DEFAULT 0,
   first_due_date          TEXT,
+  class_id                TEXT REFERENCES course_classes(id) ON DELETE SET NULL,
   created_at              TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (user_id, course_id)
 );
@@ -182,3 +185,20 @@ CREATE TABLE IF NOT EXISTS certificates (
   issued_at     TEXT NOT NULL,
   UNIQUE (user_id, course_id)
 );
+
+-- Turmas dos cursos síncronos. location (link da reunião ou endereço) só é
+-- mostrado a quem está inscrito na turma.
+CREATE TABLE IF NOT EXISTS course_classes (
+  id          TEXT PRIMARY KEY,
+  course_id   TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  start_date  TEXT,
+  end_date    TEXT,
+  schedule    TEXT NOT NULL DEFAULT '',
+  capacity    INTEGER,
+  location    TEXT NOT NULL DEFAULT '',
+  status      TEXT NOT NULL DEFAULT 'em_formacao' CHECK (status IN ('em_formacao', 'em_andamento', 'finalizada')),
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_classes_course ON course_classes(course_id);

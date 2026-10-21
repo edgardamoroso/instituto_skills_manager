@@ -42,6 +42,8 @@ before(() => {
   old.prepare("INSERT INTO users (id, name, email, password_hash, role, email_verified) VALUES (?, 'Admin', 'a@b.com', 'hash', 'admin', 1)").run('u1');
   old.prepare("INSERT INTO users (id, name, email, password_hash, role) VALUES (?, 'Aluno', 'c@d.com', 'hash', 'student')").run('u2');
   old.prepare("INSERT INTO courses (id, title, type) VALUES ('c1', 'Curso', 'gravado')").run();
+  old.prepare("INSERT INTO courses (id, title, type) VALUES ('c-vazio', 'Sem aulas', 'gravado')").run();
+  old.prepare("INSERT INTO courses (id, title, type) VALUES ('c-online', 'Síncrono', 'online')").run();
   const addCourse = old.prepare("INSERT INTO courses (id, title, type, description) VALUES (?, 'Legado', 'gravado', ?)");
   addCourse.run('c-xss', '<p onclick="alert(1)">Oi</p><img src=x onerror="alert(2)"><script>alert(3)</script>');
   addCourse.run('c-rich', '<p class="ql-align-center"><strong>Curso</strong> completo</p>');
@@ -136,6 +138,16 @@ test('arquivos de aula em /uploads migram para o storage protegido', async () =>
 
   // e um registro cujo arquivo sumiu fica como estava
   assert.equal(resource('l-sumiu'), '/uploads/nao-existe');
+});
+
+test('status dos cursos existentes: assíncrono com aulas = liberado; demais = em edição', async () => {
+  const { db } = await import('../../src/db/index.js');
+  const status = (id) => db.prepare('SELECT status FROM courses WHERE id = ?').get(id).status;
+  assert.equal(status('c1'), 'liberado'); // gravado com aulas (l-legado, l-sumiu)
+  assert.equal(status('c-vazio'), 'em_edicao');
+  assert.equal(status('c-online'), 'em_edicao');
+  const cols = db.prepare('PRAGMA table_info(enrollments)').all().map((c) => c.name);
+  assert.ok(cols.includes('class_id'));
 });
 
 test('nenhuma violação de FK após a migração', async () => {

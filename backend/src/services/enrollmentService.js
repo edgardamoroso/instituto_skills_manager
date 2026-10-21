@@ -3,10 +3,12 @@ import { db, transaction } from '../db/index.js';
 import { addMonths, isValidISODate, todayISO } from '../lib/dates.js';
 import { badRequest, conflict, notFound } from '../lib/errors.js';
 import { getPaymentRows, summarizePayments } from './paymentService.js';
+import { assertClassAvailable, getClass } from './classService.js';
 
 const getEnrollmentStmt = db.prepare('SELECT * FROM enrollments WHERE id = ?');
 const getUserStmt = db.prepare("SELECT id, name, email, phone FROM users WHERE id = ? AND role = 'student'");
-const getCourseStmt = db.prepare('SELECT id, title, type, price_cents FROM courses WHERE id = ?');
+const getCourseStmt = db.prepare('SELECT id, title, type, price_cents, status FROM courses WHERE id = ?');
+const setClassStmt = db.prepare('UPDATE enrollments SET class_id = ? WHERE id = ?');
 const existingEnrollmentStmt = db.prepare('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?');
 const listByCourseStmt = db.prepare(
   `SELECT e.*, u.name AS user_name, u.email AS user_email, u.phone AS user_phone
@@ -19,8 +21,8 @@ const listByUserStmt = db.prepare(
    WHERE e.user_id = ? ORDER BY c.title ASC`,
 );
 const insertEnrollmentStmt = db.prepare(
-  `INSERT INTO enrollments (id, user_id, course_id, status, status_reason, installments_count, installment_value_cents, first_due_date)
-   VALUES (@id, @user_id, @course_id, @status, @status_reason, @installments_count, @installment_value_cents, @first_due_date)`,
+  `INSERT INTO enrollments (id, user_id, course_id, status, status_reason, installments_count, installment_value_cents, first_due_date, class_id)
+   VALUES (@id, @user_id, @course_id, @status, @status_reason, @installments_count, @installment_value_cents, @first_due_date, @class_id)`,
 );
 const insertPaymentStmt = db.prepare(
   `INSERT INTO payments (id, enrollment_id, number, due_date, amount_cents)
@@ -29,6 +31,12 @@ const insertPaymentStmt = db.prepare(
 const deletePaymentsStmt = db.prepare('DELETE FROM payments WHERE enrollment_id = ?');
 const updateStatusStmt = db.prepare('UPDATE enrollments SET status = ?, status_reason = ? WHERE id = ?');
 const deleteEnrollmentStmt = db.prepare('DELETE FROM enrollments WHERE id = ?');
+
+// Resumo da turma para listas (sem o link/local).
+function classSummary(classId) {
+  const row = getClass(classId);
+  return row ? { id: row.id, name: row.name, status: row.status, startDate: row.start_date, endDate: row.end_date, schedule: row.schedule } : null;
+}
 
 function enrollmentBase(row, today) {
   const summary = summarizePayments(getPaymentRows(row.id), today);
@@ -41,6 +49,8 @@ function enrollmentBase(row, today) {
     installmentsCount: row.installments_count,
     installmentValueCents: row.installment_value_cents,
     firstDueDate: row.first_due_date,
+    classId: row.class_id || null,
+    class: classSummary(row.class_id),
     createdAt: row.created_at,
     payment: summary,
     delinquent: summary.delinquent,
@@ -67,6 +77,7 @@ export function createEnrollment(input) {
   const course = getCourseStmt.get(input.courseId);
   if (!course) throw notFound('COURSE_NOT_FOUND');
   if (existingEnrollmentStmt.get(input.userId, input.courseId)) throw conflict('ALREADY_ENROLLED');
+  const classId = input.classId ? assertClassAvailable(course.id, input.classId).id : null;
 
   const count = Number.parseInt(input.installmentsCount, 10);
   const valueCents = Number.parseInt(input.installmentValueCents, 10);
@@ -87,6 +98,7 @@ export function createEnrollment(input) {
     installments_count: withPlan ? count : 0,
     installment_value_cents: withPlan ? valueCents : 0,
     first_due_date: withPlan ? firstDueDate : null,
+    class_id: classId,
   };
   insertEnrollmentStmt.run(enrollment);
   if (withPlan) generatePayments(enrollment.id, count, valueCents, firstDueDate);
@@ -94,11 +106,19 @@ export function createEnrollment(input) {
 }
 
 // Solicitação feita pelo próprio aluno: cria matrícula inativa, sem plano,
-// para o administrador depois definir as parcelas e ativar.
-export function requestEnrollment(userId, courseId) {
-  if (!getCourseStmt.get(courseId)) throw notFound('COURSE_NOT_FOUND');
+// para o administrador depois definir as parcelas e ativar. Só em curso
+// liberado; curso síncrono exige turma em formação com vaga.
+export function requestEnrollment(userId, courseId, classId = null) {
+  const course = getCourseStmt.get(courseId);
+  if (!course) throw notFound('COURSE_NOT_FOUND');
   const existing = existingEnrollmentStmt.get(userId, courseId);
   if (existing) return getEnrollmentDetail(existing.id);
+  if (course.status !== 'liberado') throw conflict('COURSE_NOT_OPEN');
+  let chosenClass = null;
+  if (course.type === 'online') {
+    if (!classId) throw badRequest('CLASS_REQUIRED');
+    chosenClass = assertClassAvailable(course.id, classId, { forStudent: true }).id;
+  }
   const enrollment = {
     id: crypto.randomUUID(),
     user_id: userId,
@@ -108,6 +128,7 @@ export function requestEnrollment(userId, courseId) {
     installments_count: 0,
     installment_value_cents: 0,
     first_due_date: null,
+    class_id: chosenClass,
   };
   insertEnrollmentStmt.run(enrollment);
   return getEnrollmentDetail(enrollment.id);
@@ -176,6 +197,15 @@ export function regeneratePlan(enrollmentId, input) {
     ).run(count, valueCents, firstDueDate, enrollmentId);
   });
   generatePayments(enrollmentId, count, valueCents, firstDueDate);
+  return getEnrollmentDetail(enrollmentId);
+}
+
+// Admin: coloca/troca/tira o aluno de uma turma (null = sem turma).
+export function setEnrollmentClass(enrollmentId, classId) {
+  const row = getEnrollmentStmt.get(enrollmentId);
+  if (!row) throw notFound('ENROLLMENT_NOT_FOUND');
+  const next = classId ? assertClassAvailable(row.course_id, classId, { ignoreClassId: row.class_id }).id : null;
+  setClassStmt.run(next, enrollmentId);
   return getEnrollmentDetail(enrollmentId);
 }
 
