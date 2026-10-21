@@ -27,6 +27,23 @@ const urlHints = {
   link: 'Qualquer página externa (abre em nova aba).',
 };
 
+// Página só de turmas (curso síncrono): gerenciar-curso.html?id=...&secao=turmas
+function classesMarkup(course, backHref) {
+  return `
+    <section class="course-heading">
+      <a class="back-link" href="${backHref}">← Voltar</a>
+      <span class="type-pill">Turmas</span>
+      <span class="badge status-${course.status}">${courseStatusLabel(course.status)}</span>
+      <h1>${escapeHtml(course.title)}</h1>
+      <p class="course-description">
+        Crie as turmas deste curso síncrono e acompanhe os inscritos.
+        ${course.status === 'liberado' ? '' : '<strong>O curso ainda não está Liberado:</strong> as inscrições só abrem quando você mudar o status do curso para Liberado (em Cursos → Editar).'}
+      </p>
+      <a class="btn btn-secondary" href="gerenciar-curso.html?id=${encodeURIComponent(course.id)}">Ir para as aulas →</a>
+    </section>
+    <section class="panel section-stack" id="class-manager"></section>`;
+}
+
 function editorMarkup(course, backHref) {
   return `
     <section class="course-heading">
@@ -39,8 +56,8 @@ function editorMarkup(course, backHref) {
         então a ordem da lista é a ordem do curso.
         <a href="curso.html?id=${encodeURIComponent(course.id)}" target="_blank" rel="noopener">Ver como o aluno vê ↗</a>
       </p>
+      ${course.type === 'online' ? `<a class="btn btn-secondary" href="gerenciar-curso.html?id=${encodeURIComponent(course.id)}&secao=turmas">Gerenciar turmas →</a>` : ''}
     </section>
-    ${course.type === 'online' ? '<section class="panel section-stack" id="class-manager"></section>' : ''}
     <section class="panel">
       <form id="editor-lesson-form" class="lesson-form" novalidate>
         <h2 id="editor-form-title">Nova aula</h2>
@@ -124,9 +141,14 @@ export async function initCourseEditor() {
     return;
   }
 
+  if (new URLSearchParams(window.location.search).get('secao') === 'turmas' && course.type === 'online') {
+    document.title = `Turmas — ${course.title} | Instituto Skills Manager`;
+    root.innerHTML = classesMarkup(course, backHref);
+    await mountClassManager(document.getElementById('class-manager'), course, user);
+    return;
+  }
+
   root.innerHTML = editorMarkup(course, backHref);
-  const classBox = document.getElementById('class-manager');
-  if (classBox) await mountClassManager(classBox, course, user);
 
   const form = document.getElementById('editor-lesson-form');
   const listNode = document.getElementById('editor-lesson-list');

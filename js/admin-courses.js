@@ -115,6 +115,7 @@ export async function initAdminCourses() {
           <div class="actions">
             <button class="action-btn edit" data-action="edit" data-id="${course.id}">Editar</button>
             <a class="action-btn lessons" href="gerenciar-curso.html?id=${course.id}">Aulas</a>
+            ${course.type === 'online' ? `<a class="action-btn lessons" href="gerenciar-curso.html?id=${course.id}&secao=turmas">Turmas</a>` : ''}
             <button class="action-btn delete" data-action="delete" data-id="${course.id}">Excluir</button>
           </div>
         </div>`).join('')
