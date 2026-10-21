@@ -1,5 +1,5 @@
 import { api, ApiError } from './api.js';
-import { clearUserCache, currentUser } from './session.js';
+import { clearUserCache, currentUser, renderAuthNav, roleHome } from './session.js';
 import { escapeHtml } from './format.js';
 
 function safeNext(raw) {
@@ -98,10 +98,18 @@ export async function initSignupPage() {
         address: data.get('address'),
         password: data.get('password'),
       });
+      const email = String(data.get('email') || '').trim();
       form.reset();
-      feedback.innerHTML = `Cadastro recebido. Enviamos um link de confirmação para `
-        + `<strong>${escapeHtml(String(data.get('email')))}</strong>. `
-        + `Abra o e-mail e clique no link para ativar sua conta.`;
+      feedback.dataset.tone = 'ok';
+      feedback.innerHTML = `Cadastro recebido! Enviamos um link de confirmação para `
+        + `<strong>${escapeHtml(email)}</strong>. Abra o e-mail (confira também o spam) e clique no link `
+        + `para ativar sua conta. O link vale por 24 horas.<br />`
+        + `Não recebeu? <a href="#" data-resend>Reenviar o e-mail de confirmação</a>.`;
+      feedback.querySelector('[data-resend]')?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        await api.resendVerification(email).catch(() => {});
+        feedback.textContent = `Se o cadastro de ${email} estiver pendente, enviamos um novo link. Confira a caixa de entrada e o spam.`;
+      });
     } catch (error) {
       feedback.textContent = error instanceof ApiError
         ? (registerErrors[error.code] || 'Não foi possível criar a conta.')
@@ -121,8 +129,9 @@ export async function initVerifyEmailPage() {
   try {
     const result = await api.verifyEmail(token);
     clearUserCache();
+    await renderAuthNav(); // agora logado: troca "Entrar / Novo usuário" pelo nome e "Sair"
     box.innerHTML = `<p>E-mail confirmado! Você já está logado como <strong>${escapeHtml(result.user.name)}</strong>.</p>`
-      + `<a class="btn btn-primary" href="${result.user.role === 'admin' ? 'matriculas.html' : 'index.html'}">Continuar</a>`;
+      + `<a class="btn btn-primary" href="${roleHome(result.user)}">${result.user.role === 'student' ? 'Escolher meu curso' : 'Continuar'}</a>`;
   } catch (error) {
     const msg = error instanceof ApiError && error.code === 'VERIFICATION_INVALID'
       ? 'Este link é inválido ou expirou.'

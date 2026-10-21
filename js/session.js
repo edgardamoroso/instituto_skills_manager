@@ -53,10 +53,18 @@ export async function renderAuthNav() {
       ${studentLink}
       <a href="conta.html" class="nav-link nav-user">${escapeHtml(user.name)}</a>
       <a href="#" class="nav-link" data-action="logout">Sair</a>`;
-  } else if (!navLinks.querySelector('a[href="login.html"]')) {
-    slot.innerHTML = '<a href="login.html" class="nav-link">Entrar</a>';
+  } else {
+    // Visitante: "Entrar" e o botão "Novo usuário" (cadastro com confirmação por e-mail).
+    const parts = [];
+    if (!navLinks.querySelector('a[href="login.html"]')) parts.push('<a href="login.html" class="nav-link">Entrar</a>');
+    if (document.body.dataset.page !== 'signup' && !navLinks.querySelector('a[href="cadastro.html"]')) {
+      parts.push('<a href="cadastro.html" class="nav-link nav-cta">Novo usuário</a>');
+    }
+    slot.innerHTML = parts.join('');
   }
   if (slot.childNodes.length) navLinks.append(slot);
+  // Chamadas só para visitantes (ex.: "Novo usuário" no banner da página inicial).
+  document.querySelectorAll('[data-guest-only]').forEach((node) => { node.hidden = Boolean(user); });
 
   const logout = slot.querySelector('[data-action="logout"]');
   if (logout) {

@@ -1179,3 +1179,33 @@ legend {
     width: 100%;
   }
 }
+
+/* ---- Botão "Novo usuário" (visitantes) ---- */
+.nav-link.nav-cta {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+}
+
+.nav-link.nav-cta:hover {
+  background: var(--primary-dark);
+}
+
+.hero .nav-link.nav-cta {
+  background: #e8971e;
+  color: #14213d;
+}
+
+.btn-accent {
+  background: #e8971e;
+  color: #14213d;
+}
+
+.btn-accent:hover {
+  background: #f0a83a;
+}
+
+[data-guest-only][hidden] {
+  display: none;
+}
